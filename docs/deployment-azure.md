@@ -63,8 +63,8 @@ Diagnóstico `check-access.ps1` executado pelo mantenedor (IDs de assinatura/ten
 
 - Uso apenas durante o trial (sem pay-as-you-go); ambiente descartável e recriável.
 - Barreira de acesso: Easy Auth com Entra ID restrito ao tenant do mantenedor.
-- Antes da Sprint 1A: conferir no portal (Cost Management + Billing) o crédito e os dias
-  restantes do trial, para garantir que a sprint caiba no período.
+- Crédito do trial verificado no portal em 26/09/2026: US$ 199,99 restantes, expirando em
+  26 dias (por volta de 22/10/2026). A Sprint 1A precisa ser executada e validada antes disso.
 
 ## 3. Parâmetros
 

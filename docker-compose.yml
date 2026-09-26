@@ -1,15 +1,33 @@
 # =============================================================
 # Guardião Financeiro BR — Docker Compose (ambiente LOCAL)
 #
-# Sprint 0: somente PostgreSQL. Os serviços `backend` e `frontend`
-# serão adicionados na Sprint 1 (ver PROJECT_PLAN.md).
+#   cp .env.example .env        # defina POSTGRES_PASSWORD (e DEV_AUTH_ENABLED=true p/ demo)
+#   docker compose up --build   # http://localhost:8080
 #
-# Uso:
-#   cp .env.example .env      # ajuste POSTGRES_PASSWORD
-#   docker compose up -d
-#   docker compose ps         # aguarde "healthy"
+# Serviços: db (PostgreSQL) → migrate (Alembic + bootstrap, executa e sai)
+#           → backend (API) → frontend (Nginx + SPA, proxy /api).
+# Todas as portas são publicadas SOMENTE em 127.0.0.1.
 # =============================================================
 name: guardiao-financeiro-br
+
+x-backend-image: &backend-image
+  build:
+    context: ./backend
+  image: guardiao-financeiro-br/backend:local
+
+x-backend-env:
+  &backend-env # Local por padrão. A imagem, fora do Compose, assume APP_ENV=production.
+  APP_ENV: ${APP_ENV:-local}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_FORMAT: ${LOG_FORMAT:-json}
+  POSTGRES_HOST: db
+  POSTGRES_PORT: '5432'
+  POSTGRES_DB: ${POSTGRES_DB:-guardiao}
+  POSTGRES_USER: ${POSTGRES_USER:-guardiao}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env}
+  # Autenticação DEV simulada: só funciona com APP_ENV=local (ADR-004).
+  DEV_AUTH_ENABLED: ${DEV_AUTH_ENABLED:-false}
+  DEV_AUTH_ROLES: ${DEV_AUTH_ROLES:-ADMIN}
 
 services:
   db:
@@ -20,12 +38,10 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-guardiao}
       POSTGRES_USER: ${POSTGRES_USER:-guardiao}
-      # Obrigatória: o compose falha se não estiver definida no .env.
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env}
       TZ: UTC
       PGTZ: UTC
     ports:
-      # Publicado apenas na interface local da máquina.
       - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
     volumes:
       # PostgreSQL 18+: o volume deve ser montado em /var/lib/postgresql.
@@ -36,6 +52,49 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+
+  migrate:
+    <<: *backend-image
+    command: ['sh', '-c', 'alembic upgrade head && python -m app.cli bootstrap']
+    environment: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    <<: *backend-image
+    restart: unless-stopped
+    environment: *backend-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      # Acesso direto à API e à documentação OpenAPI (http://localhost:8000/api/docs).
+      - '127.0.0.1:${BACKEND_PORT:-8000}:8000'
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  frontend:
+    build:
+      context: ./frontend
+    image: guardiao-financeiro-br/frontend:local
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:${FRONTEND_PORT:-8080}:8080'
+    read_only: true
+    tmpfs:
+      - /tmp
     security_opt:
       - no-new-privileges:true
 

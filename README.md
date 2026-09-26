@@ -2,7 +2,7 @@
 
 > Open source, exception-based **accounts payable verification** for the Brazilian market.
 
-**Status:** 🚧 Sprint 0 — foundation & architecture. No business features yet.
+**Status:** 🚧 Sprint 1 — core platform (API, database, UI shell). Business features start in Sprint 2.
 Leia em português: [README.pt-BR.md](README.pt-BR.md).
 
 ## The problem
@@ -49,15 +49,18 @@ React + TypeScript SPA → FastAPI modular monolith (API + worker) → PostgreSQ
 document storage (local disk or Azure Blob). See [ARCHITECTURE.md](ARCHITECTURE.md),
 [docs/architecture.md](docs/architecture.md) and the [ADRs](docs/decisions/README.md).
 
-## Quick start (Sprint 0)
+## Quick start
 
-Requirements: Git, Docker Desktop, [uv](https://docs.astral.sh/uv/).
+Requirements: Git and Docker Desktop.
 
 ```bash
-cp .env.example .env      # set POSTGRES_PASSWORD to any local value
-docker compose up -d      # starts PostgreSQL only (API/frontend arrive in Sprint 1)
-cd backend && uv sync && uv run pytest
+cp .env.example .env         # set POSTGRES_PASSWORD; set DEV_AUTH_ENABLED=true for local use
+docker compose up --build    # PostgreSQL + migrations + API + web app
 ```
+
+Open <http://localhost:8080> (API docs at <http://localhost:8000/api/docs>). The local
+development login is simulated and only works with `APP_ENV=local`; Microsoft Entra ID
+arrives in Sprint 7.
 
 Details: [docs/environment-setup.md](docs/environment-setup.md).
 

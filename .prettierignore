@@ -4,3 +4,7 @@ backend/
 node_modules/
 **/dist/
 **/.venv/
+**/coverage/
+**/playwright-report/
+**/test-results/
+**/package-lock.json

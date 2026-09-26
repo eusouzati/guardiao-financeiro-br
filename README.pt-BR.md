@@ -2,7 +2,7 @@
 
 > Plataforma open source de **conferência inteligente de contas a pagar** para o mercado brasileiro.
 
-**Status:** 🚧 Sprint 0 — fundação e arquitetura. Ainda sem funcionalidades de negócio.
+**Status:** 🚧 Sprint 1 — plataforma base (API, banco, interface). Funcionalidades de negócio começam na Sprint 2.
 Read in English: [README.md](README.md).
 
 ## O problema
@@ -49,22 +49,26 @@ SPA React + TypeScript → monólito modular FastAPI (API + worker) → PostgreS
 documentos (disco local ou Azure Blob). Veja [ARCHITECTURE.md](ARCHITECTURE.md),
 [docs/architecture.md](docs/architecture.md) e as [ADRs](docs/decisions/README.md).
 
-## Início rápido (Sprint 0)
+## Início rápido
 
-Requisitos: Git, Docker Desktop e [uv](https://docs.astral.sh/uv/).
+Requisitos: Git e Docker Desktop.
 
 ```bash
-cp .env.example .env      # defina POSTGRES_PASSWORD com um valor local
-docker compose up -d      # sobe apenas o PostgreSQL (API/frontend chegam na Sprint 1)
-cd backend && uv sync && uv run pytest
+cp .env.example .env         # defina POSTGRES_PASSWORD; para uso local, DEV_AUTH_ENABLED=true
+docker compose up --build    # PostgreSQL + migrations + API + interface
 ```
+
+Acesse <http://localhost:8080> (documentação da API em <http://localhost:8000/api/docs>).
+O login local é simulado e só funciona com `APP_ENV=local`; o Microsoft Entra ID chega na
+Sprint 7.
 
 Detalhes em [docs/environment-setup.md](docs/environment-setup.md).
 
 ## Docker
 
-`docker compose up` sobe o ambiente local. Na Sprint 0 apenas o PostgreSQL 18, publicado
-somente em `127.0.0.1`, com health check.
+`docker compose up` sobe PostgreSQL 18, migrations (serviço `migrate`), API FastAPI e a
+interface servida por Nginx. Todas as portas ficam publicadas somente em `127.0.0.1`, com
+health checks, containers somente leitura e sem privilégios adicionais.
 
 ## Segurança
 

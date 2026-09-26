@@ -3,6 +3,10 @@
 > Versão da Sprint 0 — conceitual. Tipos físicos e migrations serão criados a partir da
 > Sprint 1 (Alembic). Nomes de código em inglês (ADR-013).
 
+> **Implementado na Sprint 1 (migration `0001`):** `organization`, `configuration`
+> (sobrescritas versionadas, append-only) e `audit_event` (append-only). As demais
+> entidades entram nas sprints seguintes.
+
 ## 1. Convenções
 
 - PK `id UUID`; `organization_id UUID NOT NULL` em toda entidade empresarial (ADR-010).

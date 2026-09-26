@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+/*
+ * Identidade visual própria do Guardião Financeiro BR.
+ * Cores de status sempre acompanhadas de ícone e texto (WCAG — não depender só de cor).
+ */
+@theme {
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+
+  --color-brand-50: #eef8f8;
+  --color-brand-100: #d3eeee;
+  --color-brand-600: #0e5e63;
+  --color-brand-700: #0b4b4f;
+  --color-brand-800: #083a3d;
+  --color-brand-900: #062a2c;
+
+  --color-ok-50: #ecfdf3;
+  --color-ok-700: #166534;
+  --color-warning-50: #fffbeb;
+  --color-warning-700: #92400e;
+  --color-critical-50: #fef2f2;
+  --color-critical-700: #b91c1c;
+  --color-info-50: #eff6ff;
+  --color-info-700: #1d4ed8;
+}
+
+@layer base {
+  html {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  /* Foco sempre visível para navegação por teclado. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-600;
+  }
+}

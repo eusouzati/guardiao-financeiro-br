@@ -66,6 +66,11 @@ flowchart TB
 | PostgreSQL | metadados, fila `job`, auditoria                                 | Docker                  | Flexible Server          |
 | Storage    | arquivos originais, por hash                                     | disco local             | Blob Storage privado     |
 
+> **Estado (Sprint 1):** API, frontend (Nginx), PostgreSQL e o serviço `migrate` (Alembic +
+> bootstrap) estão implementados e sobem com `docker compose up`. O worker entra quando
+> houver processamento assíncrono (Sprint 2). Health checks: `/api/health/live` e
+> `/api/health/ready`.
+
 ## 4. Backend — camadas (C4 — nível 3)
 
 ```text

@@ -17,14 +17,14 @@ unitários com até 10 casas decimais e quantidades com até 4 casas.
 - Banco: `NUMERIC` com precisão explícita por natureza do campo. Referência: leiaute da
   NF-e 4.00 (formato `inteiros v decimais`), a revalidar contra o MOC/NT vigente na Sprint 2:
 
-| Natureza | Exemplos | Formato no leiaute | Tipo no banco |
-| --- | --- | --- | --- |
-| Valores monetários (totais, itens, tributos, bases de cálculo, frete, desconto) | `vProd`, `vNF`, `vICMS`, `vBC`, valores IBS/CBS, total do pedido | 13v2 | `NUMERIC(18,2)` |
-| Preço/valor unitário | `vUnCom`, `vUnTrib`, preço unitário do pedido | 11v0-10 | `NUMERIC(23,10)` |
-| Quantidade | `qCom`, `qTrib`, quantidade pedida/recebida | 11v0-4 | `NUMERIC(19,4)` |
-| Alíquota | `pICMS`, `pIPI`, alíquotas IBS/CBS | 3v2-4 | `NUMERIC(9,4)` |
-| Percentual de negócio | `tolerance_percentage`, divergência % | — | `NUMERIC(9,4)` |
-| Tolerância absoluta | `tolerance_absolute` | — | `NUMERIC(18,2)` |
+| Natureza                                                                        | Exemplos                                                         | Formato no leiaute | Tipo no banco    |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------ | ---------------- |
+| Valores monetários (totais, itens, tributos, bases de cálculo, frete, desconto) | `vProd`, `vNF`, `vICMS`, `vBC`, valores IBS/CBS, total do pedido | 13v2               | `NUMERIC(18,2)`  |
+| Preço/valor unitário                                                            | `vUnCom`, `vUnTrib`, preço unitário do pedido                    | 11v0-10            | `NUMERIC(23,10)` |
+| Quantidade                                                                      | `qCom`, `qTrib`, quantidade pedida/recebida                      | 11v0-4             | `NUMERIC(19,4)`  |
+| Alíquota                                                                        | `pICMS`, `pIPI`, alíquotas IBS/CBS                               | 3v2-4              | `NUMERIC(9,4)`   |
+| Percentual de negócio                                                           | `tolerance_percentage`, divergência %                            | —                  | `NUMERIC(9,4)`   |
+| Tolerância absoluta                                                             | `tolerance_absolute`                                             | —                  | `NUMERIC(18,2)`  |
 
 - **Preservar a precisão original do documento fiscal.** O parser converte o texto do XML
   diretamente para `Decimal` (sem passar por `float`) e **não arredonda**: campos unitários

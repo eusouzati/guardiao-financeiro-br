@@ -1,30 +1,47 @@
 # Frontend — Guardião Financeiro BR
 
-SPA em **React + TypeScript + Vite + Tailwind CSS** (Node 24 LTS, npm).
+SPA em **React 19 + TypeScript + Vite + Tailwind CSS 4** (Node 24 LTS, npm).
 
-## Estado (Sprint 0)
+## Execução
 
-Diretório reservado. O projeto Vite, ESLint (flat config), Vitest e Playwright serão
-criados na **Sprint 1**, junto com layout, navegação e páginas iniciais
-(Dashboard, Documentos, Pedidos, Fornecedores, Recebimentos, Exceções, Configurações).
+```bash
+npm ci
+npm run dev        # http://localhost:5173 — proxy de /api para http://localhost:8000
+```
 
-## Estrutura prevista
+Em containers, o Nginx serve o build e encaminha `/api/` ao backend (mesma origem, sem CORS).
+
+## Qualidade e testes
+
+```bash
+npm run lint           # ESLint strict type-checked + jsx-a11y
+npm run typecheck
+npm run format:check
+npm test               # Vitest + Testing Library
+npm run build
+npm run e2e            # Playwright, com a stack rodando (docker compose up)
+```
+
+## Estrutura
 
 ```text
-frontend/
-├── src/
-│   ├── app/          # rotas, layout, providers
-│   ├── pages/        # telas
-│   ├── components/   # componentes reutilizáveis (acessíveis)
-│   ├── api/          # cliente HTTP tipado (gerado/validado a partir do OpenAPI)
-│   ├── i18n/         # textos pt-BR centralizados
-│   └── lib/          # formatação pt-BR (moeda, datas), utilitários
-├── tests/            # Vitest
-└── e2e/              # Playwright
+src/
+├── app/          # rotas, layout, sessão do usuário
+├── pages/        # telas
+├── components/   # componentes reutilizáveis e ícones próprios
+├── api/          # cliente HTTP e tipos das respostas
+├── hooks/        # useApiQuery
+├── i18n/         # textos pt-BR
+├── lib/          # formatação pt-BR (moeda, datas) sem float
+└── test/         # utilitários de teste
+e2e/              # Playwright
+nginx/            # configuração do Nginx sem privilégios
 ```
 
 ## Regras
 
 - Nenhuma decisão de autorização ou cálculo financeiro decisório no frontend.
-- Valores recebidos como string decimal e formatados com `Intl` em `pt-BR`.
+- Valores decimais chegam como string e são formatados sem conversão para `float`
+  (o lint proíbe `parseFloat`).
 - Status sempre com texto + ícone, nunca só cor (WCAG).
+- Módulos ainda não implementados mostram estado vazio honesto, sem dados simulados.

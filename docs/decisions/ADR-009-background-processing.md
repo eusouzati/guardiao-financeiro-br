@@ -30,15 +30,15 @@ momento, nem outros componentes de infraestrutura apenas para antecipar escala i
 A implementação deve ficar desacoplada (interface `JobQueue`) para substituição futura e
 prever obrigatoriamente:
 
-| Requisito | Como |
-| --- | --- |
-| Idempotência | `idempotency_key` com constraint única por organização; reenfileirar a mesma chave retorna o job existente |
-| Status | `PENDING`, `RUNNING`, `SUCCEEDED`, `FAILED_RETRYABLE`, `FAILED_PERMANENT`, `CANCELLED` |
-| Tentativas/retries | `attempts`, `max_attempts`, backoff exponencial com jitter via `available_at` |
-| Timestamps (UTC) | `created_at`, `available_at`, `started_at`, `finished_at`, `updated_at` |
-| Locking seguro | `SELECT … FOR UPDATE SKIP LOCKED` para reservar o próximo job, em transação curta |
+| Requisito                       | Como                                                                                                              |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Idempotência                    | `idempotency_key` com constraint única por organização; reenfileirar a mesma chave retorna o job existente        |
+| Status                          | `PENDING`, `RUNNING`, `SUCCEEDED`, `FAILED_RETRYABLE`, `FAILED_PERMANENT`, `CANCELLED`                            |
+| Tentativas/retries              | `attempts`, `max_attempts`, backoff exponencial com jitter via `available_at`                                     |
+| Timestamps (UTC)                | `created_at`, `available_at`, `started_at`, `finished_at`, `updated_at`                                           |
+| Locking seguro                  | `SELECT … FOR UPDATE SKIP LOCKED` para reservar o próximo job, em transação curta                                 |
 | Concorrência / worker que morre | `locked_by` + `lock_expires_at` (lease); jobs com lease vencido voltam a ficar disponíveis; handlers idempotentes |
-| Erros | `last_error_code` e mensagem sanitizada (sem segredos/dados pessoais) |
+| Erros                           | `last_error_code` e mensagem sanitizada (sem segredos/dados pessoais)                                             |
 
 ## Alternativas consideradas
 

@@ -26,20 +26,20 @@ critérios de aceite verificados.
 
 ## 2. Sprints
 
-| #   | Sprint                           | Critérios de aceite resumidos                                                                                                                                                            | Status                           |
-| --- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| 0   | Foundation & Architecture        | Estrutura coerente; ambiente validado; arquitetura e decisões documentadas; nenhum recurso Azure; nenhuma integração ativa; nenhum segredo                                               | Concluída — aguardando aprovação |
-| 1   | Core Platform                    | Frontend, backend e banco executam; migrations; health check; testes iniciais passam; sem fake API permanente                                                                            | Planejada                        |
-| 1A  | Azure Dev Environment            | Bicep `dev` validado (build/validate/what-if); custo estimado e aprovado; deploy manual autorizado; acesso restrito na borda; procedimento de destruição documentado; só dados fictícios | Planejada                        |
-| 2   | Fiscal Document Engine           | Upload seguro, storage, SHA-256, NF-e e NFS-e nacional versionados, XML seguro, fixtures sintéticas, testes de parser                                                                    | Planejada                        |
-| 3   | Suppliers, POs & Receipts        | Importação CSV/XLSX com templates e relatório (processadas/importadas/ignoradas/inválidas/erros)                                                                                         | Planejada                        |
-| 4   | Matching & Rule Engine           | 13 regras com testes independentes, three-way match, tolerâncias, explicabilidade, ruleset versionado                                                                                    | Planejada                        |
-| 5   | Exception Workbench              | Dashboard operacional, fila com filtros/ordenação/paginação, detalhe lado a lado, revisão e histórico                                                                                    | Planejada                        |
-| 6   | Microsoft 365 Ingestion          | Graph com caixa escopada, dedup, retry, mock, docs Entra/RBAC for Applications                                                                                                           | Planejada                        |
-| 7   | Identity, RBAC, LGPD & Hardening | Entra ID, RBAC no backend, escopo por organização, retenção, headers, rate limit, OWASP                                                                                                  | Planejada                        |
-| 8   | Azure Infrastructure             | Bicep hml/prod validado (what-if) sobre os módulos da 1A; custos e backup documentados; sem recursos sem autorização                                                                     | Planejada                        |
-| 9   | GitHub Actions & DevSecOps       | CI completo, CodeQL, Trivy, SBOM, OIDC, produção com aprovação manual                                                                                                                    | Planejada                        |
-| 10  | Open Source Release              | Revisão de segredos/dados/licenças; docs finais; `v0.1.0` sem publicar sem autorização                                                                                                   | Planejada                        |
+| #   | Sprint                           | Critérios de aceite resumidos                                                                                                                                                            | Status               |
+| --- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| 0   | Foundation & Architecture        | Estrutura coerente; ambiente validado; arquitetura e decisões documentadas; nenhum recurso Azure; nenhuma integração ativa; nenhum segredo                                               | Concluída (aprovada) |
+| 1   | Core Platform                    | Frontend, backend e banco executam; migrations; health check; testes iniciais passam; sem fake API permanente                                                                            | Concluída (aprovada) |
+| 1A  | Azure Dev Environment            | Bicep `dev` validado (build/validate/what-if); custo estimado e aprovado; deploy manual autorizado; acesso restrito na borda; procedimento de destruição documentado; só dados fictícios | Em andamento         |
+| 2   | Fiscal Document Engine           | Upload seguro, storage, SHA-256, NF-e e NFS-e nacional versionados, XML seguro, fixtures sintéticas, testes de parser                                                                    | Planejada            |
+| 3   | Suppliers, POs & Receipts        | Importação CSV/XLSX com templates e relatório (processadas/importadas/ignoradas/inválidas/erros)                                                                                         | Planejada            |
+| 4   | Matching & Rule Engine           | 13 regras com testes independentes, three-way match, tolerâncias, explicabilidade, ruleset versionado                                                                                    | Planejada            |
+| 5   | Exception Workbench              | Dashboard operacional, fila com filtros/ordenação/paginação, detalhe lado a lado, revisão e histórico                                                                                    | Planejada            |
+| 6   | Microsoft 365 Ingestion          | Graph com caixa escopada, dedup, retry, mock, docs Entra/RBAC for Applications                                                                                                           | Planejada            |
+| 7   | Identity, RBAC, LGPD & Hardening | Entra ID, RBAC no backend, escopo por organização, retenção, headers, rate limit, OWASP                                                                                                  | Planejada            |
+| 8   | Azure Infrastructure             | Bicep hml/prod validado (what-if) sobre os módulos da 1A; custos e backup documentados; sem recursos sem autorização                                                                     | Planejada            |
+| 9   | GitHub Actions & DevSecOps       | CI completo, CodeQL, Trivy, SBOM, OIDC, produção com aprovação manual                                                                                                                    | Planejada            |
+| 10  | Open Source Release              | Revisão de segredos/dados/licenças; docs finais; `v0.1.0` sem publicar sem autorização                                                                                                   | Planejada            |
 
 ## 3. Sprint 0 — checklist
 
@@ -58,14 +58,26 @@ critérios de aceite verificados.
 - [x] Decisões do mantenedor aplicadas às ADRs
 - [x] Validações executadas
 
-## 4. Critério final do MVP
+## 4. Sprint 1 — checklist
+
+- [x] Backend FastAPI com configuração validada, logs estruturados, erros padronizados
+- [x] PostgreSQL + SQLAlchemy + Alembic (migration 0001, triggers append-only)
+- [x] Health checks (`/api/health/live`, `/api/health/ready`)
+- [x] Autenticação DEV com travas + autorização no backend
+- [x] Endpoints reais: `/api/v1/me`, `/api/v1/configurations`, `/api/v1/audit/events`
+- [x] Frontend: layout, navegação e 7 páginas iniciais (sem API simulada)
+- [x] Docker Compose completo (db, migrate, backend, frontend) com health checks
+- [x] Testes backend (unitários + integração), frontend (Vitest) e E2E (Playwright)
+- [x] Documentação atualizada (ADR-018, API, códigos de erro, dependências)
+
+## 5. Critério final do MVP
 
 Fluxo ponta a ponta: NF-e recebida → XML identificado → fornecedor → hash → duplicidade →
 pedido → recebimento → comparação → regras → classificação → exceções → explicação →
 análise humana → decisão registrada → auditoria. Demonstração dos cenários A (sem
 divergências), B (com exceção) e C (duplicidade).
 
-## 5. Riscos do projeto
+## 6. Riscos do projeto
 
 | Risco                                                            | Impacto                       | Mitigação                                                                     |
 | ---------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------- |

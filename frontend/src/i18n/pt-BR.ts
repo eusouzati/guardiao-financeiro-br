@@ -1,0 +1,121 @@
+/** Textos da interface (pt-BR), centralizados para revisão (ADR-013). */
+export const t = {
+  appName: 'Guardião Financeiro BR',
+  appTagline: 'Conferência inteligente de contas a pagar',
+  skipToContent: 'Pular para o conteúdo',
+  mainNavigation: 'Navegação principal',
+  openMenu: 'Abrir menu',
+  closeMenu: 'Fechar menu',
+  nav: {
+    dashboard: 'Painel',
+    exceptions: 'Exceções',
+    documents: 'Documentos',
+    purchaseOrders: 'Pedidos',
+    receipts: 'Recebimentos',
+    suppliers: 'Fornecedores',
+    settings: 'Configurações',
+  },
+  devAuthBanner:
+    'Ambiente local com autenticação de desenvolvimento simulada. Não utilize dados reais.',
+  session: {
+    loading: 'Carregando sua sessão…',
+    notAuthenticatedTitle: 'Autenticação necessária',
+    notAuthenticatedHelp:
+      'O login com Microsoft Entra ID será habilitado na Sprint 7. Em ambiente local, defina DEV_AUTH_ENABLED=true no arquivo .env e reinicie o backend.',
+    orgNotInitializedTitle: 'Organização não inicializada',
+    genericErrorTitle: 'Não foi possível carregar a aplicação',
+  },
+  common: {
+    retry: 'Tentar novamente',
+    requestId: 'Código da requisição',
+    loading: 'Carregando…',
+    yes: 'Sim',
+    no: 'Não',
+    notAvailable: '—',
+  },
+  status: {
+    ok: 'Operacional',
+    unavailable: 'Indisponível',
+    info: 'Informação',
+    warning: 'Atenção',
+    critical: 'Crítico',
+  },
+  dashboard: {
+    title: 'O que precisa da minha atenção agora?',
+    subtitle:
+      'Indicadores operacionais de conferência. Casos normais são processados automaticamente; aqui aparecem as exceções.',
+    kpiNoData: 'Sem dados até o processamento de documentos ser habilitado.',
+    kpis: {
+      received: 'Documentos recebidos',
+      noDivergence: 'Sem divergência',
+      needsReview: 'Precisam de revisão',
+      critical: 'Críticos',
+      possibleDuplicates: 'Possíveis duplicidades',
+      totalProcessed: 'Valor total processado',
+      exceptionAmount: 'Valor associado a exceções',
+    },
+    systemStatus: 'Situação do sistema',
+    api: 'API',
+    database: 'Banco de dados',
+    schema: 'Versão do schema',
+    version: 'Versão da aplicação',
+    environment: 'Ambiente',
+  },
+  modules: {
+    upcoming: (sprint: string) => `Módulo previsto para a Sprint ${sprint}.`,
+    documents: {
+      title: 'Documentos',
+      description: 'NF-e e NFS-e recebidas, com dados extraídos do XML e situação da conferência.',
+      empty: 'O envio e a leitura de documentos fiscais serão habilitados em breve.',
+      sprint: '2',
+    },
+    exceptions: {
+      title: 'Exceções',
+      description:
+        'Fila de documentos que precisam de análise humana, com o motivo de cada exceção.',
+      empty: 'A fila de exceções será habilitada junto com o motor de regras.',
+      sprint: '4 e 5',
+    },
+    purchaseOrders: {
+      title: 'Pedidos de compra',
+      description: 'Pedidos importados por CSV/XLSX para o cruzamento com documentos fiscais.',
+      empty: 'A importação de pedidos será habilitada em breve.',
+      sprint: '3',
+    },
+    receipts: {
+      title: 'Recebimentos',
+      description: 'Materiais recebidos e serviços atestados, inclusive entregas parciais.',
+      empty: 'A importação de recebimentos será habilitada em breve.',
+      sprint: '3',
+    },
+    suppliers: {
+      title: 'Fornecedores',
+      description: 'Cadastro de fornecedores com CNPJ, razão social e nomes alternativos.',
+      empty: 'O cadastro e a importação de fornecedores serão habilitados em breve.',
+      sprint: '3',
+    },
+  },
+  settings: {
+    title: 'Configurações',
+    description:
+      'Políticas de conferência da organização. Somente leitura nesta versão; a edição com trilha de auditoria será habilitada em sprint futura.',
+    organization: 'Organização',
+    legalName: 'Razão social',
+    taxId: 'CNPJ',
+    notInformed: 'Não informado',
+    policies: 'Políticas de conferência',
+    columns: {
+      policy: 'Política',
+      value: 'Valor atual',
+      default: 'Padrão',
+      source: 'Origem',
+    },
+    source: { DEFAULT: 'Padrão do sistema', ORGANIZATION: 'Definido pela organização' },
+    units: { DAYS: 'dias', MINUTES: 'minutos' } as Record<string, string>,
+  },
+  notFound: {
+    title: 'Página não encontrada',
+    description: 'O endereço acessado não existe.',
+    back: 'Voltar ao painel',
+  },
+} as const;
