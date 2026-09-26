@@ -1,0 +1,33 @@
+# Hooks locais opcionais: `uvx pre-commit install`
+# Revisões fixadas por SHA (tag indicada no comentário).
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=512']
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: ['--markdown-linebreak-ext=md']
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+        exclude: '\.(ps1|bat|cmd)$'
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: a56c0b927e6465d37cae3e97d35d4d18ab2b96cd # v0.16.9
+    hooks:
+      - id: ruff-check
+        args: ['--fix']
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e # v8.30.1
+    hooks:
+      - id: gitleaks

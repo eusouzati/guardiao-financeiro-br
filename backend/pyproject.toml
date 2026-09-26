@@ -1,0 +1,80 @@
+[project]
+name = "guardiao-financeiro-br-backend"
+version = "0.0.0"
+description = "Backend do Guardião Financeiro BR — conferência inteligente de contas a pagar."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.13,<3.14"
+# Sprint 0: nenhuma dependência de runtime. FastAPI, SQLAlchemy etc. entram na Sprint 1.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy==2.3.1",
+    "pytest==9.1.1",
+    "pytest-cov==7.1.0",
+    "ruff==0.16.9",
+]
+
+[tool.uv]
+# Aplicação, não biblioteca: não empacotar/instalar o projeto no venv.
+package = false
+
+# ---------------------------------------------------------------- Ruff
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["app", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "S",        # bandit (segurança)
+    "DTZ",      # datetimes sem timezone
+    "T20",      # print
+    "SIM",      # simplificações
+    "RUF",      # regras do ruff
+    "N",        # nomes
+    "C4",       # comprehensions
+    "PT",       # estilo pytest
+    "TID",      # imports proibidos
+    "PL",       # pylint (subset)
+]
+ignore = [
+    "PLR0913",  # muitas funções de domínio têm vários parâmetros nomeados
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004"]  # assert e números mágicos são normais em testes
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"decimal.getcontext".msg = "Não altere o contexto global de Decimal; use app.domain.money (ADR-007)."
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["app", "tests"]
+warn_unreachable = true
+pretty = true
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+markers = [
+    "integration: testes que dependem de PostgreSQL/serviços locais",
+]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true

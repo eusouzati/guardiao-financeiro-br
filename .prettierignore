@@ -1,0 +1,6 @@
+LICENSE
+NOTICE
+backend/
+node_modules/
+**/dist/
+**/.venv/

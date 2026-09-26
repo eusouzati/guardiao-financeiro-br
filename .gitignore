@@ -1,0 +1,85 @@
+# =============================================================
+# Guardião Financeiro BR — .gitignore
+# Regra de ouro: nada de segredos, dados reais ou saídas locais.
+# =============================================================
+
+# ---- Segredos e ambiente ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+secrets/
+*.secret
+*.secrets.json
+local.settings.json
+
+# ---- Dados reais / documentos fiscais (NUNCA versionar) ----
+# Diretórios ancorados na raiz para não ocultar módulos de código homônimos.
+# Fixtures sintéticas vivem em diretórios explicitamente permitidos
+# (ver docs/synthetic-data-policy.md).
+/data/
+/uploads/
+/storage/
+/local-storage/
+/real-data/
+*.real.xml
+/backups/
+*.dump
+*.backup
+*.sql.gz
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.python-cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+dist/
+build/
+
+# ---- Node / frontend ----
+node_modules/
+.vite/
+frontend/dist/
+*.tsbuildinfo
+npm-debug.log*
+.eslintcache
+
+# ---- Testes E2E ----
+playwright-report/
+test-results/
+blob-report/
+
+# ---- Infra ----
+.azure/
+# JSON gerado por `az bicep build`
+infra/**/main.json
+*.tfstate*
+
+# ---- IDEs / SO ----
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Logs e saídas locais ----
+/logs/
+*.log
+/tmp/
+/out/
