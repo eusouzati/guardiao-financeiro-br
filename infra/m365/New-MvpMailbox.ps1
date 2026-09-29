@@ -86,12 +86,23 @@ try {
 
     if (-not $SkipBlockSignIn) {
         Write-Step 'Bloqueando login interativo da conta da caixa compartilhada'
-        if ($WhatIf) { Write-Host "[what-if] az ad user update --id $address --account-enabled false" }
+        if ($WhatIf) { Write-Host "[what-if] az ad user update --id <objectId da conta de $address> --account-enabled false" }
         else {
-            & az ad user update --id $address --account-enabled false 2>$null
-            if ($LASTEXITCODE -ne 0) {
-                Write-Warning 'Nao foi possivel bloquear o login (permissao de User Administrator ou az login no tenant). Faca manualmente: docs/microsoft-365.md.'
+            # A conta no Entra ID pode ter UPN diferente do e-mail e leva alguns minutos para
+            # replicar apos a criacao da caixa: busca pelo e-mail e nao interrompe o script.
+            $previous = $ErrorActionPreference
+            $ErrorActionPreference = 'Continue'
+            try {
+                $userId = & az ad user list --filter "mail eq '$address'" --query '[0].id' -o tsv 2>$null
+                if ($LASTEXITCODE -eq 0 -and $userId) {
+                    & az ad user update --id $userId.Trim() --account-enabled false 2>$null
+                }
+                if ($LASTEXITCODE -ne 0 -or -not $userId) {
+                    Write-Warning 'Login interativo ainda nao bloqueado (conta ainda nao replicada no Entra ID ou sem permissao de User Administrator). Aguarde alguns minutos e execute o script novamente; ele e idempotente.'
+                }
+                else { Write-Host 'Login interativo bloqueado.' }
             }
+            finally { $ErrorActionPreference = $previous }
         }
     }
 

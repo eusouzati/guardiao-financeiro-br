@@ -52,7 +52,10 @@ function Assert-AzContext([string]$ExpectedSubscriptionId, [string]$ExpectedTena
     if (-not $ExpectedSubscriptionId -or -not $ExpectedTenantId) {
         throw 'Informe a assinatura e o tenant esperados (-SubscriptionId/-TenantId ou $env:AZURE_SUBSCRIPTION_ID/$env:AZURE_TENANT_ID).'
     }
-    $account = & az account show -o json 2>$null | Out-String | ConvertFrom-Json
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $account = & az account show -o json 2>$null | Out-String | ConvertFrom-Json }
+    finally { $ErrorActionPreference = $previous }
     if (-not $account) { throw 'Sem sessao na Azure CLI. Execute: az login --tenant <tenant>' }
     Write-Host ("Assinatura: {0} ({1})" -f $account.name, $account.id)
     Write-Host ("Tenant:     {0}" -f $account.tenantId)
@@ -75,7 +78,10 @@ function Get-SignedInUserObjectId {
 
 function Get-KeyVaultSecretOrNull([string]$VaultName, [string]$Name) {
     if (-not $VaultName) { return $null }
-    $value = & az keyvault secret show --vault-name $VaultName --name $Name --query value -o tsv 2>$null
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $value = & az keyvault secret show --vault-name $VaultName --name $Name --query value -o tsv 2>$null }
+    finally { $ErrorActionPreference = $previous }
     if ($LASTEXITCODE -ne 0 -or -not $value) { return $null }
     return $value.Trim()
 }

@@ -70,7 +70,12 @@ function Write-TempJson($Value) {
 }
 
 function Confirm-ServicePrincipal([string]$AppId) {
-    $sp = & az ad sp show --id $AppId -o json 2>$null | Out-String | ConvertFrom-Json
+    # "sp show" escreve em stderr quando o SP nao existe; no Windows PowerShell 5.1 isso
+    # viraria excecao com ErrorActionPreference=Stop.
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $sp = & az ad sp show --id $AppId -o json 2>$null | Out-String | ConvertFrom-Json }
+    finally { $ErrorActionPreference = $previous }
     if ($sp) { return $sp }
     if ($WhatIf) { Write-Host "[what-if] az ad sp create --id $AppId"; return $null }
     return (Invoke-AzJson ad sp create --id $AppId)
