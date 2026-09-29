@@ -26,6 +26,11 @@ tenant ou o domínio conectado não forem os esperados.
 - Módulo `ExchangeOnlineManagement` — os scripts **não instalam** nada. Instalação, se
   aprovada: `Install-Module ExchangeOnlineManagement -Scope CurrentUser`.
 - Azure CLI autenticada no mesmo tenant (`az login --tenant <tenant-id>`).
+- Organização do Exchange com personalização habilitada (necessária para escopos e
+  atribuições de RBAC). Tenants novos vêm "desidratados": nesse caso
+  `Set-ExchangeAppRbac.ps1` para e pede autorização; com ela, execute-o uma vez com
+  `-EnableOrganizationCustomization` (mudança única e permanente no tenant, pode levar
+  algumas horas) e depois novamente sem o switch.
 
 ## Execução
 

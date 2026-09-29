@@ -36,6 +36,7 @@ param(
     [string]$ScopeAttributeValue = 'guardiao-financeiro-mvp',
     [string]$ScopeName = 'gfbr-mvp-mailbox-scope',
     [string[]]$Roles = @('Application Mail.Read'),
+    [switch]$EnableOrganizationCustomization,
     [switch]$WhatIf
 )
 
@@ -66,6 +67,24 @@ try {
     $domains = @(Get-AcceptedDomain | ForEach-Object { "$($_.DomainName)" })
     if ($domains -notcontains $TenantDomain) { throw "PARE: o dominio '$TenantDomain' nao pertence a organizacao conectada." }
 
+    # RBAC customizado (escopos e atribuicoes) exige a organizacao "hidratada". A
+    # hidratacao e uma mudanca unica e permanente no tenant: so e feita com o switch
+    # explicito -EnableOrganizationCustomization, autorizado pelo responsavel.
+    Write-Step 'Personalizacao da organizacao (Enable-OrganizationCustomization)'
+    $orgConfig = Get-OrganizationConfig
+    if ($orgConfig.IsDehydrated) {
+        if (-not $EnableOrganizationCustomization) {
+            throw 'PARE: a organizacao ainda nao permite RBAC customizado (IsDehydrated=True). Com autorizacao, execute novamente com -EnableOrganizationCustomization; a ativacao pode levar ate algumas horas.'
+        }
+        if ($WhatIf) { Write-Host '[what-if] Enable-OrganizationCustomization' }
+        else {
+            Enable-OrganizationCustomization -ErrorAction Stop
+            Write-Warning 'Personalizacao solicitada. Pode levar ate algumas horas; execute este script novamente depois.'
+            return
+        }
+    }
+    else { Write-Host 'Organizacao ja permite RBAC customizado.' }
+
     Write-Step 'Conferindo a caixa do MVP e o alcance do filtro'
     $mailbox = Get-EXOMailbox -Identity $address -Properties CustomAttribute1 -ErrorAction SilentlyContinue
     if (-not $mailbox) { throw "PARE: $address nao existe. Execute New-MvpMailbox.ps1." }
@@ -82,7 +101,8 @@ try {
     if ($sp) { Write-Host "Ja registrado: $($sp.DisplayName)" }
     elseif ($WhatIf) { Write-Host "[what-if] New-ServicePrincipal -AppId $MailAppId -ObjectId $MailServicePrincipalObjectId -DisplayName $MailAppName" }
     else {
-        $sp = New-ServicePrincipal -AppId $MailAppId -ObjectId $MailServicePrincipalObjectId -DisplayName $MailAppName
+        $sp = New-ServicePrincipal -AppId $MailAppId -ObjectId $MailServicePrincipalObjectId -DisplayName $MailAppName -ErrorAction Stop
+        Write-Host "Registrado: $($sp.DisplayName)"
     }
 
     Write-Step "Management Scope $ScopeName"
@@ -94,15 +114,16 @@ try {
         Write-Host "Ja existe com o filtro: $($scope.RecipientFilter)"
     }
     elseif ($WhatIf) { Write-Host "[what-if] New-ManagementScope -Name $ScopeName -RecipientRestrictionFilter `"$filter`"" }
-    else { New-ManagementScope -Name $ScopeName -RecipientRestrictionFilter $filter | Out-Null }
+    else { New-ManagementScope -Name $ScopeName -RecipientRestrictionFilter $filter -ErrorAction Stop | Out-Null }
 
     foreach ($role in $Roles) {
         if ($role -notlike 'Application *') { throw "PARE: '$role' nao e um papel de aplicacao do RBAC for Applications." }
         Write-Step "Papel '$role' limitado ao escopo"
-        $existing = @()
-        if ($sp) {
-            $existing = @(Get-ManagementRoleAssignment -RoleAssignee $MailAppId -Role $role -ErrorAction SilentlyContinue)
-        }
+        # Atribuicoes deste papel feitas a este app (por nome, AppId ou ObjectId do SP).
+        $ids = @($MailAppName, $MailAppId, $MailServicePrincipalObjectId, "$($sp.Identity)", "$($sp.DisplayName)") | Where-Object { $_ }
+        $existing = @(Get-ManagementRoleAssignment -Role $role -ErrorAction SilentlyContinue | Where-Object {
+                $_.RoleAssigneeType -eq 'ServicePrincipal' -and ($ids -contains "$($_.RoleAssigneeName)" -or $ids -contains "$($_.RoleAssignee)")
+            })
         $scoped = @($existing | Where-Object { "$($_.CustomResourceScope)" -eq $ScopeName })
         $unscoped = @($existing | Where-Object { "$($_.CustomResourceScope)" -ne $ScopeName })
         if ($unscoped.Count -gt 0) {
@@ -111,13 +132,13 @@ try {
         if ($scoped.Count -gt 0) { Write-Host "Ja atribuido: $($scoped[0].Name)"; continue }
         $assignmentName = 'gfbr-mvp-' + (($role -replace '^Application\s+', '') -replace '[^A-Za-z0-9]', '-')
         if ($WhatIf) { Write-Host "[what-if] New-ManagementRoleAssignment -Name $assignmentName -App $MailAppId -Role '$role' -CustomResourceScope $ScopeName" }
-        else { New-ManagementRoleAssignment -Name $assignmentName -App $MailAppId -Role $role -CustomResourceScope $ScopeName | Out-Null }
+        else { New-ManagementRoleAssignment -Name $assignmentName -App $MailAppId -Role $role -CustomResourceScope $ScopeName -ErrorAction Stop | Out-Null }
     }
 
     if (-not $WhatIf) {
         Write-Step 'Resultado'
-        Get-ManagementRoleAssignment -RoleAssignee $MailAppId |
-            Select-Object Name, Role, CustomResourceScope | Format-Table -AutoSize
+        Get-ManagementRoleAssignment -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'gfbr-mvp-*' } |
+            Select-Object Name, Role, RoleAssigneeName, CustomResourceScope | Format-Table -AutoSize | Out-String | Write-Host
         Write-Host 'A propagacao leva de 30 minutos a 2 horas. Depois: ./infra/m365/Test-MailboxAccess.ps1'
     }
 }
