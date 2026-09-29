@@ -74,9 +74,14 @@ else {
     $open = @($rules | Where-Object { $_.startIpAddress -ne '0.0.0.0' -or $_.endIpAddress -ne '0.0.0.0' })
     Check 'Firewall sem faixas externas (somente servicos do Azure)' ($open.Count -eq 0) "regras: $($rules.name -join ', ')"
 }
-# Nomes longos das opcoes: a abreviacao (-s/-d) mudou entre versoes da Azure CLI.
-$db = & az postgres flexible-server db show --resource-group $rg --server-name $s.postgresServerName `
-    --database-name $s.postgresDatabaseName --query name -o tsv 2>$null
+# "db list" + filtro: as opcoes de "db show" mudaram entre versoes da Azure CLI.
+$db = $null
+try {
+    $ErrorActionPreference = 'Continue'
+    $db = & az postgres flexible-server db list --resource-group $rg --server-name $s.postgresServerName `
+        --query "[?name=='$($s.postgresDatabaseName)'].name | [0]" -o tsv 2>$null
+}
+finally { $ErrorActionPreference = 'Stop' }
 Check "Database $($s.postgresDatabaseName) existe" ($db -eq $s.postgresDatabaseName)
 
 Write-Step 'Container Apps'
