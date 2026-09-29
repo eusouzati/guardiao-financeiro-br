@@ -189,6 +189,7 @@ module postgres 'modules/postgres.bicep' = {
     storageSizeGB: sku.postgres.storageGB
     backupRetentionDays: sku.postgres.backupRetentionDays
     administratorPassword: postgresAdminPassword
+    usePrivateNetwork: enablePrivateNetwork
     delegatedSubnetId: enablePrivateNetwork ? network!.outputs.postgresSubnetId : ''
     privateDnsZoneId: enablePrivateNetwork ? network!.outputs.postgresPrivateDnsZoneId : ''
   }
@@ -202,6 +203,7 @@ module containerAppsEnvironment 'modules/container-apps-environment.bicep' = {
     location: location
     tags: allTags
     logAnalyticsWorkspaceName: monitoring.outputs.workspaceName
+    useVnet: enablePrivateNetwork
     infrastructureSubnetId: enablePrivateNetwork ? network!.outputs.containerAppsSubnetId : ''
     infrastructureResourceGroupName: 'rg-${baseName}-cae-infra'
   }

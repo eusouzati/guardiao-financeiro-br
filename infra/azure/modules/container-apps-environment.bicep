@@ -5,12 +5,13 @@ param name string
 param location string
 param tags object
 param logAnalyticsWorkspaceName string
-@description('Sub-rede delegada a Microsoft.App/environments. Vazio = sem VNet própria.')
+@description('true = ambiente na VNet do MVP (ADR-011). Definido em tempo de compilação.')
+param useVnet bool
+@description('Sub-rede delegada a Microsoft.App/environments (obrigatória com useVnet=true).')
 param infrastructureSubnetId string = ''
 @description('Grupo de recursos gerenciado pela plataforma (somente com VNet).')
 param infrastructureResourceGroupName string
 
-var useVnet = !empty(infrastructureSubnetId)
 
 resource workspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName

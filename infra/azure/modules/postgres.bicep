@@ -2,7 +2,7 @@
 //
 // - SKU econômica, sem alta disponibilidade, backup local com retenção configurável.
 // - TLS obrigatório (require_secure_transport = on, padrão do serviço).
-// - Rede privada (delegatedSubnetId informado): sem endpoint público.
+// - Rede privada (usePrivateNetwork=true): sem endpoint público.
 //   Sem rede privada: endpoint público liberado somente para serviços do Azure — nenhum IP
 //   externo e nunca 0.0.0.0/0.
 // - Autenticação Entra habilitada junto com senha. A senha administrativa é usada apenas no
@@ -19,11 +19,12 @@ param backupRetentionDays int
 param administratorPassword string
 param administratorLogin string = 'gfbradmin'
 param databaseName string = 'guardiao_financeiro'
-@description('Sub-rede delegada. Vazio = endpoint público restrito (ADR-011, alternativa).')
+@description('true = integração à VNet, sem endpoint público (ADR-011). Definido em tempo de compilação.')
+param usePrivateNetwork bool
+@description('Sub-rede delegada (obrigatória com usePrivateNetwork=true).')
 param delegatedSubnetId string = ''
 param privateDnsZoneId string = ''
 
-var usePrivateNetwork = !empty(delegatedSubnetId)
 
 resource server 'Microsoft.DBforPostgreSQL/flexibleServers@2025-08-01' = {
   name: name
