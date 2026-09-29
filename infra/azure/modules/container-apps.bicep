@@ -137,7 +137,9 @@ resource web 'Microsoft.App/containerApps@2026-01-01' = {
           image: frontendImage
           resources: { cpu: json('0.25'), memory: '0.5Gi' }
           env: [
-            { name: 'BACKEND_UPSTREAM', value: 'http://${apiName}' }
+            // FQDN interno completo: o resolver do Nginx não aplica os domínios de busca
+            // do /etc/resolv.conf, então o nome curto da aplicação não resolveria.
+            { name: 'BACKEND_UPSTREAM', value: 'http://${api.properties.configuration.ingress.fqdn}' }
           ]
           probes: [
             {
