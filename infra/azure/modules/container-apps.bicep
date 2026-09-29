@@ -159,7 +159,6 @@ resource web 'Microsoft.App/containerApps@2026-01-01' = {
       }
     }
   }
-  dependsOn: [api]
 }
 
 resource migrate 'Microsoft.App/jobs@2026-01-01' = {
