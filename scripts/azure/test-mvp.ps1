@@ -64,17 +64,19 @@ $pg = Invoke-AzJson postgres flexible-server show -n $s.postgresServerName -g $r
 Check 'Versao 18' ($pg.version -eq '18')
 Check 'Sem alta disponibilidade (MVP)' ($pg.highAvailability.mode -eq 'Disabled')
 Check "Backup com retencao ($($pg.backup.backupRetentionDays) dias)" ($pg.backup.backupRetentionDays -ge 7)
-$tls = & az postgres flexible-server parameter show -g $rg -s $s.postgresServerName -n require_secure_transport --query value -o tsv
+$tls = & az postgres flexible-server parameter show --resource-group $rg --server-name $s.postgresServerName --name require_secure_transport --query value -o tsv
 Check 'TLS obrigatorio (require_secure_transport=on)' ($tls -eq 'on')
 if ($pg.network.publicNetworkAccess -eq 'Disabled') {
     Check 'Sem acesso publico (rede privada)' $true
 }
 else {
-    $rules = @(Invoke-AzJson postgres flexible-server firewall-rule list -g $rg -n $s.postgresServerName)
+    $rules = @(Invoke-AzJson postgres flexible-server firewall-rule list --resource-group $rg --name $s.postgresServerName)
     $open = @($rules | Where-Object { $_.startIpAddress -ne '0.0.0.0' -or $_.endIpAddress -ne '0.0.0.0' })
     Check 'Firewall sem faixas externas (somente servicos do Azure)' ($open.Count -eq 0) "regras: $($rules.name -join ', ')"
 }
-$db = & az postgres flexible-server db show -g $rg -s $s.postgresServerName -d $s.postgresDatabaseName --query name -o tsv 2>$null
+# Nomes longos das opcoes: a abreviacao (-s/-d) mudou entre versoes da Azure CLI.
+$db = & az postgres flexible-server db show --resource-group $rg --server-name $s.postgresServerName `
+    --database-name $s.postgresDatabaseName --query name -o tsv 2>$null
 Check "Database $($s.postgresDatabaseName) existe" ($db -eq $s.postgresDatabaseName)
 
 Write-Step 'Container Apps'
