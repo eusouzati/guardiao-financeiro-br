@@ -41,7 +41,7 @@ obrigação legal/regulatória, legítimo interesse (prevenção a fraude e erro
 - **Exclusão:** mecanismo de exclusão/anonimização conforme política da organização,
   registrado em auditoria; auditoria pseudonimizada em vez de apagada quando houver
   obrigação de guarda.
-- **Backup:** ver [`backup-recovery.md`](backup-recovery.md); exclusões respeitam o ciclo
+- **Backup:** ver [`backup-restore.md`](backup-restore.md); exclusões respeitam o ciclo
   de expiração dos backups (documentado).
 - **Telemetria:** nunca envia documentos fiscais completos nem dados pessoais
   desnecessários.

@@ -6,7 +6,7 @@ from pydantic import Field
 
 from app.schemas.common import ApiModel
 
-# Decimais trafegam como string (ADR-007); booleanos e inteiros como tipos JSON nativos.
+# Decimais trafegam como string (ADR-009); booleanos e inteiros como tipos JSON nativos.
 type JsonPolicyValue = bool | int | str
 
 

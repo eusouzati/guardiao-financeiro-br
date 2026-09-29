@@ -53,7 +53,7 @@ ou saídas locais.
 
 - Ruff (lint + format), linha de 100 colunas; mypy `strict`.
 - Tipagem obrigatória em código de produção.
-- `Decimal` para dinheiro/quantidade; nunca `float` (ADR-007).
+- `Decimal` para dinheiro/quantidade; nunca `float` (ADR-009).
 - Nada de `print`; usar logger estruturado.
 - Exceções de domínio com código estável (`GFB-XXXX`).
 - Testes em `backend/tests/` espelhando `app/`; nome `test_<comportamento>`.
@@ -91,5 +91,5 @@ ou saídas locais.
 ## 9. Versionamento
 
 - Aplicação: SemVer (`0.x` até estabilizar).
-- Regras e ruleset: SemVer próprio (ADR-005).
+- Regras e ruleset: SemVer próprio (ADR-016).
 - Parsers: versão do leiaute suportado explícita.

@@ -1,7 +1,7 @@
 # Backend — Guardião Financeiro BR
 
 API FastAPI (Python 3.13, gerenciado com **uv**). Arquitetura em camadas: ver
-[`../docs/architecture.md`](../docs/architecture.md) §4 e ADR-006. Endpoints em
+[`../docs/architecture.md`](../docs/architecture.md) §4 e ADR-018. Endpoints em
 [`../docs/api.md`](../docs/api.md); códigos de erro em
 [`../docs/error-codes.md`](../docs/error-codes.md).
 

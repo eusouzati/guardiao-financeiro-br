@@ -1,6 +1,6 @@
 """Configuração da aplicação por variáveis de ambiente (pydantic-settings).
 
-Regras de segurança aplicadas na carga (fail-fast, ADR-004):
+Regras de segurança aplicadas na carga (fail-fast, ADR-006):
 
 - ``DEV_AUTH_ENABLED=true`` só é aceito com ``APP_ENV=local``. Em qualquer outro ambiente a
   aplicação **não inicia**.
@@ -20,10 +20,19 @@ from app.domain.identity import Role
 
 
 class AppEnv(StrEnum):
+    """Ambientes conhecidos (ADR-002).
+
+    Existe um único ambiente de nuvem, o ``mvp``. ``local`` e ``test`` são usados apenas
+    em desenvolvimento e nos testes automatizados.
+    """
+
     LOCAL = "local"
     TEST = "test"
-    HOMOLOGATION = "homologation"
-    PRODUCTION = "production"
+    MVP = "mvp"
+
+
+# Easy Auth só faz sentido atrás do sidecar de autenticação do Azure Container Apps.
+_EASY_AUTH_ENVIRONMENTS = frozenset({AppEnv.MVP})
 
 
 class InsecureConfigurationError(ValueError):
@@ -50,11 +59,18 @@ class Settings(BaseSettings):
     postgres_password: SecretStr = SecretStr("")
     db_pool_size: int = Field(default=5, ge=1, le=50)
     db_connect_timeout_seconds: int = Field(default=5, ge=1, le=60)
+    # "require" no Azure; "prefer" no ambiente local (PostgreSQL do Compose sem TLS).
+    postgres_sslmode: Literal["disable", "prefer", "require", "verify-full"] = "prefer"
 
-    # Autenticação DEV simulada (ADR-004)
+    # Autenticação DEV simulada (ADR-006)
     dev_auth_enabled: bool = False
     dev_auth_roles: Annotated[frozenset[Role], NoDecode] = frozenset({Role.ADMIN})
     dev_auth_user_name: str = "Usuário de desenvolvimento"
+
+    # Autenticação via Easy Auth do Azure Container Apps + App Roles do Entra (ADR-018).
+    # Só permitida no ambiente MVP, atrás do sidecar de autenticação.
+    easy_auth_enabled: bool = False
+    entra_tenant_id: str | None = None
 
     # Inicialização de ambiente (python -m app.cli bootstrap)
     bootstrap_organization_name: str = "Organização Demonstração (fictícia)"
@@ -76,11 +92,25 @@ class Settings(BaseSettings):
             )
         if self.dev_auth_enabled and not self.dev_auth_roles:
             raise InsecureConfigurationError("DEV_AUTH_ROLES não pode ser vazio.")
+        if self.easy_auth_enabled:
+            if self.dev_auth_enabled:
+                raise InsecureConfigurationError(
+                    "EASY_AUTH_ENABLED e DEV_AUTH_ENABLED não podem estar ativos juntos."
+                )
+            if self.app_env not in _EASY_AUTH_ENVIRONMENTS:
+                raise InsecureConfigurationError(
+                    "EASY_AUTH_ENABLED=true só é permitido com APP_ENV=mvp "
+                    f"(APP_ENV atual: {self.app_env.value})."
+                )
+            if not self.entra_tenant_id:
+                raise InsecureConfigurationError(
+                    "ENTRA_TENANT_ID é obrigatório quando EASY_AUTH_ENABLED=true."
+                )
         return self
 
     @property
-    def is_production_like(self) -> bool:
-        return self.app_env in {AppEnv.HOMOLOGATION, AppEnv.PRODUCTION}
+    def is_cloud(self) -> bool:
+        return self.app_env is AppEnv.MVP
 
 
 @lru_cache(maxsize=1)

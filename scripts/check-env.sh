@@ -27,10 +27,20 @@ if command -v docker >/dev/null 2>&1; then
     printf '  [FALTA] %-16s parado: inicie o Docker/Docker Desktop\n' "docker engine"; status=1
   fi
 fi
+check "python3"        yes "python3 --version"
 check "uv"             yes "uv --version"
-check "node"           no  "node --version"
-check "npm"            no  "npm --version"
-check "az (Azure CLI)" no  "az --version"
+check "node"           yes "node --version"
+check "npm"            yes "npm --version"
+echo "Nuvem (deploy do MVP)"
+check "az (Azure CLI)" yes "az --version"
+if command -v az >/dev/null 2>&1; then
+  if bicep=$(az bicep version 2>/dev/null | grep -m1 'Bicep CLI version'); then
+    printf '  [ok]    %-16s %s\n' "bicep" "$bicep"
+  else
+    printf '  [FALTA] %-16s instale: az bicep install\n' "bicep"; status=1
+  fi
+fi
+check "pwsh"           no  "pwsh --version"
 check "gh"             no  "gh --version"
 
 if [ -f .env ]; then echo "  [ok]    .env presente (não versionado)"; else echo "  [--]    .env ausente: cp .env.example .env"; fi

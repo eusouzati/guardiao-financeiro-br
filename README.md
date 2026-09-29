@@ -2,7 +2,7 @@
 
 > Open source, exception-based **accounts payable verification** for the Brazilian market.
 
-**Status:** 🚧 Sprint 1 — core platform (API, database, UI shell). Business features start in Sprint 2.
+**Status:** 🚧 Sprint 0 — MVP cloud foundation (Azure + Microsoft 365). Business features start in Sprint 2.
 Leia em português: [README.pt-BR.md](README.pt-BR.md).
 
 ## The problem
@@ -41,17 +41,21 @@ financial decisions and its core uses **no LLM**.
 - Exception workbench with side-by-side comparison, human review and append-only audit trail.
 - Microsoft 365 mailbox ingestion via Microsoft Graph, scoped to a single mailbox.
 - Microsoft Entra ID authentication, backend-enforced RBAC, LGPD by design.
-- Azure deployment (Container Apps, PostgreSQL Flexible Server, Blob, Key Vault) via Bicep.
+- A single **MVP** environment on Azure (Container Apps, PostgreSQL 18, Blob Storage, Key
+  Vault) and Microsoft 365, provisioned with Bicep and idempotent scripts.
 
 ## Architecture
 
-React + TypeScript SPA → FastAPI modular monolith (API + worker) → PostgreSQL and
-document storage (local disk or Azure Blob). See [ARCHITECTURE.md](ARCHITECTURE.md),
-[docs/architecture.md](docs/architecture.md) and the [ADRs](docs/decisions/README.md).
+Cloud-first: React + TypeScript SPA → FastAPI modular monolith (API + worker) on Azure
+Container Apps → Azure PostgreSQL 18 and Azure Blob Storage, with secrets in Key Vault and a
+dedicated Microsoft 365 shared mailbox. There is a single environment, **MVP**. See
+[ARCHITECTURE.md](ARCHITECTURE.md), [docs/cloud-architecture.md](docs/cloud-architecture.md)
+and the [ADRs](docs/decisions/README.md) (Portuguese).
 
-## Quick start
+## Local development
 
-Requirements: Git and Docker Desktop.
+The official environment is the Azure MVP ([docs/deployment-azure.md](docs/deployment-azure.md));
+your machine is for development and tests. Requirements: Git and Docker Desktop.
 
 ```bash
 cp .env.example .env         # set POSTGRES_PASSWORD; set DEV_AUTH_ENABLED=true for local use
@@ -59,8 +63,8 @@ docker compose up --build    # PostgreSQL + migrations + API + web app
 ```
 
 Open <http://localhost:8080> (API docs at <http://localhost:8000/api/docs>). The local
-development login is simulated and only works with `APP_ENV=local`; Microsoft Entra ID
-arrives in Sprint 7.
+development login is simulated and only works with `APP_ENV=local`; the MVP uses
+Microsoft Entra ID.
 
 Details: [docs/environment-setup.md](docs/environment-setup.md).
 

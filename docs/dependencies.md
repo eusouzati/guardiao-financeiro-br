@@ -18,7 +18,7 @@
 
 ¹ Usado sem modificação, como biblioteca carregada dinamicamente. A LGPL permite esse uso
 em projeto Apache-2.0; a imagem Docker redistribui o pacote original do PyPI (código-fonte
-disponível no projeto psycopg). Ver ADR-018.
+disponível no projeto psycopg). Ver ADR-020.
 
 Dependências transitivas principais: starlette (BSD-3), anyio (MIT), mako (MIT),
 typing-extensions (PSF-2.0).

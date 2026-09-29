@@ -11,8 +11,9 @@ from app.security.permissions import Permission, permissions_for
 
 
 class AuthMethod(StrEnum):
-    DEV = "DEV"  # autenticação simulada — somente APP_ENV=local (ADR-004)
-    ENTRA_ID = "ENTRA_ID"  # Sprint 7
+    DEV = "DEV"  # autenticação simulada — somente APP_ENV=local (ADR-006)
+    EASY_AUTH = "EASY_AUTH"  # Entra ID via Easy Auth do Container Apps (ADR-006)
+    ENTRA_ID = "ENTRA_ID"  # validação JWT direta (Sprint 7)
 
 
 @dataclass(frozen=True, slots=True)

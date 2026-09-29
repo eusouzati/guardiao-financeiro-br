@@ -1,1 +1,1 @@
-"""Regras determinísticas e versionadas do motor de conferência. Puras, sem I/O (ADR-005)."""
+"""Regras determinísticas e versionadas do motor de conferência. Puras, sem I/O (ADR-016)."""

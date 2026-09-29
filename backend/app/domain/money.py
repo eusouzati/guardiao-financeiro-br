@@ -1,4 +1,4 @@
-"""Regras de representação de valores monetários e decimais (ADR-007).
+"""Regras de representação de valores monetários e decimais (ADR-009).
 
 - Valores são sempre ``Decimal`` construídos a partir de texto ou inteiro — nunca ``float``.
 - Nenhum arredondamento implícito: a precisão original é preservada.

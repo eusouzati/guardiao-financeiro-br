@@ -1,4 +1,4 @@
-"""Representação monetária: Decimal sempre, nunca float (ADR-007)."""
+"""Representação monetária: Decimal sempre, nunca float (ADR-009)."""
 
 from __future__ import annotations
 

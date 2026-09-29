@@ -21,8 +21,9 @@ def organization(db_session: Session) -> None:
     db_session.commit()
 
 
-def test_readiness_ok_with_migrated_database(client_factory: ClientFactory) -> None:
-    response = client_factory().get("/api/health/ready")
+@pytest.mark.parametrize("path", ["/ready", "/api/health/ready"])
+def test_readiness_ok_with_migrated_database(client_factory: ClientFactory, path: str) -> None:
+    response = client_factory().get(path)
     assert response.status_code == 200
     body = response.json()
     assert body["database"] == "ok"

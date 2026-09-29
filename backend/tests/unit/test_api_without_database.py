@@ -38,14 +38,16 @@ def client(app: FastAPI) -> Iterator[TestClient]:
         yield test_client
 
 
-def test_liveness_does_not_need_database(client: TestClient) -> None:
-    response = client.get("/api/health/live")
+@pytest.mark.parametrize("path", ["/health", "/api/health/live"])
+def test_liveness_does_not_need_database(client: TestClient, path: str) -> None:
+    response = client.get(path)
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
-def test_readiness_reports_unavailable_database(client: TestClient) -> None:
-    response = client.get("/api/health/ready")
+@pytest.mark.parametrize("path", ["/ready", "/api/health/ready"])
+def test_readiness_reports_unavailable_database(client: TestClient, path: str) -> None:
+    response = client.get(path)
     assert response.status_code == 503
     body = response.json()
     assert body["database"] == "unavailable"

@@ -7,9 +7,16 @@
 | Git                              | 2.40+            | Sprint 0                | Versionamento                                |
 | Docker Desktop (com Compose v2+) | recente          | Sprint 0                | PostgreSQL local e, depois, a stack completa |
 | uv                               | 0.8+             | Sprint 0                | Python 3.13 + dependências do backend        |
-| Node.js                          | 24 LTS (≥ 22.22) | Sprint 1                | Frontend (npm incluso)                       |
-| Azure CLI + Bicep                | recente          | Sprint 8                | Validação de IaC (sem criar recursos)        |
+| Python                           | 3.13             | Sprint 0                | Backend (pode ser gerenciado pelo uv)        |
+| Node.js                          | 24 LTS (≥ 22.22) | Sprint 0                | Frontend (npm incluso)                       |
+| Azure CLI + Bicep                | recente          | Sprint 0                | Deploy e validação do MVP (`what-if`)        |
+| PowerShell                       | 5.1 ou 7+        | Sprint 0                | Scripts `scripts/azure` e `infra/m365`       |
+| Módulo ExchangeOnlineManagement  | recente          | Sprint 0                | Shared Mailbox e RBAC for Applications       |
 | GitHub CLI                       | opcional         | Sprint 9                | PRs/Actions                                  |
+
+> A máquina local serve para desenvolver e testar; o ambiente integrado oficial é o MVP no
+> Azure ([`deployment-azure.md`](deployment-azure.md)). Nenhuma ferramenta é instalada
+> automaticamente pelos scripts.
 
 ## Instalação do uv
 

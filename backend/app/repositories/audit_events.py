@@ -26,7 +26,7 @@ class AuditEventRecord:
 
 
 class AuditEventRepository:
-    """Somente inserção e leitura: a trilha é append-only (ADR-012)."""
+    """Somente inserção e leitura: a trilha é append-only (ADR-015)."""
 
     def __init__(self, session: Session) -> None:
         self._session = session

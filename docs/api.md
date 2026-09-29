@@ -6,10 +6,12 @@
 - Autorização sempre no backend; erros no formato de [`error-codes.md`](error-codes.md).
 - Listas sempre paginadas (`page`, `page_size` ≤ 100).
 
-## Endpoints disponíveis (Sprint 1)
+## Endpoints disponíveis
 
 | Método | Rota                     | Autenticação | Permissão            | Descrição                                                  |
 | ------ | ------------------------ | ------------ | -------------------- | ---------------------------------------------------------- |
+| GET    | `/health`                | não          | —                    | Liveness (sonda do Container Apps).                        |
+| GET    | `/ready`                 | não          | —                    | Readiness: banco acessível e migrado (503 se não).         |
 | GET    | `/api/health/live`       | não          | —                    | Processo em execução.                                      |
 | GET    | `/api/health/ready`      | não          | —                    | Banco acessível e migrado (503 se não).                    |
 | GET    | `/api/v1/me`             | sim          | —                    | Usuário atual, perfis, permissões e organização.           |
@@ -19,8 +21,13 @@
 Não existem endpoints simulados: recursos de documentos, fornecedores, pedidos,
 recebimentos, exceções, revisões e importações entram nas sprints correspondentes.
 
-## Autenticação até a Sprint 7
+`/health` e `/ready` são chamados diretamente no container da API (sem ingress público no
+MVP); `/api/health/*` são as mesmas verificações alcançáveis pelo frontend.
 
-Sem Entra ID, as rotas protegidas retornam `401` — exceto em ambiente local com
+## Autenticação
+
+No MVP, sem o login Entra ligado (Sprint 1), as rotas protegidas retornam `401`. Com
+`EASY_AUTH_ENABLED=true` (somente `APP_ENV=mvp`), a identidade vem do Easy Auth do
+Container Apps (ADR-006). Localmente, sem Entra ID, as rotas protegidas retornam `401` — exceto com
 `APP_ENV=local` e `DEV_AUTH_ENABLED=true`, quando toda requisição é tratada como o usuário
-de desenvolvimento com os perfis de `DEV_AUTH_ROLES` (ADR-004).
+de desenvolvimento com os perfis de `DEV_AUTH_ROLES` (ADR-006).

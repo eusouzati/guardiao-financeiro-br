@@ -1,0 +1,3 @@
+# Gerado a partir de BACKEND_UPSTREAM (ex.: http://backend:8000 no Compose,
+# http://<app-da-api> no Azure Container Apps).
+set $backend_upstream ${BACKEND_UPSTREAM};

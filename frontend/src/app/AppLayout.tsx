@@ -16,6 +16,9 @@ import {
 import { t } from '../i18n/pt-BR';
 import { useSession } from './sessionContext';
 
+/** Logout do Easy Auth (Container Apps): encerra a sessão e volta para a raiz. */
+const LOGOUT_URL = '/.auth/logout?post_logout_redirect_uri=/';
+
 interface NavItem {
   to: string;
   label: string;
@@ -146,9 +149,21 @@ export function AppLayout() {
                 {session.organization.legal_name}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-slate-900">{session.display_name}</p>
-              <p className="text-xs text-slate-600">{session.roles.join(', ')}</p>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-slate-900">{session.display_name}</p>
+                <p className="text-xs text-slate-600">
+                  {session.roles.length > 0 ? session.roles.join(', ') : t.noRoleAssigned}
+                </p>
+              </div>
+              {session.auth_method === 'EASY_AUTH' ? (
+                <a
+                  href={LOGOUT_URL}
+                  className="rounded-md px-3 py-1.5 text-sm font-medium text-brand-700 ring-1 ring-slate-300 hover:bg-slate-50"
+                >
+                  {t.signOut}
+                </a>
+              ) : null}
             </div>
           </header>
 

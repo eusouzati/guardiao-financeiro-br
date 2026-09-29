@@ -1,6 +1,6 @@
 # Documentos fiscais
 
-> Sprint 0 — escopo e premissas. Parsers implementados na Sprint 2 (ADR-016).
+> Sprint 0 — escopo e premissas. Parsers implementados na Sprint 2 (ADR-017).
 > **Aviso:** o Guardião Financeiro BR confere consistência e divergências; ele **não**
 > afirma que um documento está fiscal, contábil ou juridicamente correto.
 
@@ -40,7 +40,7 @@
 ## 4. Identificadores fiscais
 
 - CNPJ sempre string, preparado para o **CNPJ alfanumérico** (novas inscrições a partir de
-  julho/2026). Regra centralizada no value object `FiscalId` (ADR-008).
+  julho/2026). Regra centralizada no value object `FiscalId` (ADR-012).
 - CPF pode aparecer (ex.: prestador pessoa física): é dado pessoal (ver `lgpd.md`).
 
 ## 5. Segurança no processamento de XML

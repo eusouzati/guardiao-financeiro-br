@@ -16,7 +16,7 @@ _ACTOR_TYPES = ", ".join(f"'{a.value}'" for a in ActorType)
 
 
 class AuditEvent(UUIDPrimaryKeyMixin, Base):
-    """Trilha de auditoria append-only (ADR-012). UPDATE/DELETE/TRUNCATE bloqueados por trigger."""
+    """Trilha de auditoria append-only (ADR-015). UPDATE/DELETE/TRUNCATE bloqueados por trigger."""
 
     __tablename__ = "audit_event"
     __table_args__ = (

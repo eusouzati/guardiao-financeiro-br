@@ -16,7 +16,7 @@ export interface Organization {
 export interface Me {
   user_id: string;
   display_name: string;
-  auth_method: 'DEV' | 'ENTRA_ID';
+  auth_method: 'DEV' | 'EASY_AUTH' | 'ENTRA_ID';
   roles: string[];
   permissions: string[];
   organization: Organization;
@@ -30,7 +30,7 @@ export interface Policy {
   description: string;
   type: PolicyType;
   unit: string | null;
-  /** Decimais chegam como string (ADR-007). */
+  /** Decimais chegam como string (ADR-009). */
   value: boolean | number | string;
   default_value: boolean | number | string;
   allowed_values: string[];

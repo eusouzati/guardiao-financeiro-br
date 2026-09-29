@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router';
 
 import type { Me } from '../api/types';
 import { ErrorPanel, LoadingState } from '../components/layout';
@@ -33,6 +34,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           onRetry={query.reload}
           {...(error.status === 401 ? { help: t.session.notAuthenticatedHelp } : {})}
         />
+        <p className="mt-4 text-sm">
+          <Link to="/status" className="font-medium text-brand-700 underline">
+            {t.statusPage.link}
+          </Link>
+        </p>
       </main>
     );
   }

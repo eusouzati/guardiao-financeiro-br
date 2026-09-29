@@ -1,6 +1,6 @@
 # ADR-NNN — Título curto
 
-- **Status:** Proposta | Aceita | Substituída por ADR-NNN
+- **Status:** PROPOSED | ACCEPTED | SUPERSEDED por ADR-NNN
 - **Data:** AAAA-MM-DD
 - **Sprint:** N
 
@@ -19,6 +19,12 @@ O que foi decidido, de forma objetiva.
 
 ## Consequências
 
-- Positivas.
-- Negativas / custos / riscos.
-- O que precisa ser feito a partir desta decisão.
+- O que muda e o que precisa ser feito a partir desta decisão.
+
+## Riscos
+
+- O que pode dar errado e como é mitigado.
+
+## Possibilidade de revisão
+
+- Em que condições a decisão deve ser reavaliada.

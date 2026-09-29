@@ -60,3 +60,14 @@ test('rota inexistente mostra página não encontrada (fallback da SPA)', async 
     page.getByRole('heading', { level: 1, name: 'Página não encontrada' }),
   ).toBeVisible();
 });
+
+test('página pública de status mostra o ambiente MVP e a API operacional', async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  await page.goto('/status');
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Guardião Financeiro BR' }),
+  ).toBeVisible();
+  await expect(page.getByText('MVP', { exact: true })).toBeVisible();
+  await expect(page.getByText('Operacional')).toBeVisible();
+  expect(errors).toEqual([]);
+});

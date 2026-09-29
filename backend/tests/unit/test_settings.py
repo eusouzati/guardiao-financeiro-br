@@ -1,4 +1,4 @@
-"""Travas de configuração da autenticação DEV (ADR-004)."""
+"""Travas de configuração da autenticação DEV (ADR-006)."""
 
 from __future__ import annotations
 
@@ -10,14 +10,14 @@ from app.domain.identity import Role
 from app.repositories.database import build_database_url
 
 
-@pytest.mark.parametrize("env", [AppEnv.TEST, AppEnv.HOMOLOGATION, AppEnv.PRODUCTION])
+@pytest.mark.parametrize("env", [AppEnv.TEST, AppEnv.MVP])
 def test_dev_auth_is_rejected_outside_local(env: AppEnv) -> None:
     with pytest.raises(ValidationError, match="DEV_AUTH_ENABLED=true só é permitido"):
         Settings(app_env=env, dev_auth_enabled=True)
 
 
 def test_dev_auth_is_rejected_from_environment_variables(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("APP_ENV", "mvp")
     monkeypatch.setenv("DEV_AUTH_ENABLED", "true")
     with pytest.raises(ValidationError):
         Settings()
@@ -49,6 +49,13 @@ def test_database_url_takes_precedence_and_uses_psycopg() -> None:
     url = build_database_url(settings)
     assert url.drivername == "postgresql+psycopg"
     assert url.host == "db"
+
+
+def test_sslmode_is_applied_to_database_url() -> None:
+    settings = Settings(database_url=SecretStr("postgresql://u:p@db/x"), postgres_sslmode="require")
+    assert build_database_url(settings).query["sslmode"] == "require"
+    explicit = Settings(database_url=SecretStr("postgresql://u:p@db/x?sslmode=disable"))
+    assert build_database_url(explicit).query["sslmode"] == "disable"
 
 
 def test_database_url_built_from_components() -> None:

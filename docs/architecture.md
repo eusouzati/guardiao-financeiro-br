@@ -11,9 +11,13 @@ para análise humana — com explicabilidade, auditoria e segurança desde o in�
 
 Restrições que moldam a arquitetura:
 
-- Funciona **localmente sem Azure** e **sem qualquer LLM** (seção 58 do escopo).
+- **Cloud-First:** um único ambiente de nuvem, o **MVP** (Azure + Microsoft 365), desde a
+  Sprint 0 ([ADR-001](decisions/ADR-001-mvp-cloud-first.md),
+  [`cloud-architecture.md`](cloud-architecture.md)). A máquina local serve para
+  desenvolvimento e testes, não como ambiente oficial.
+- **Sem qualquer LLM** nas decisões de conferência.
 - Não é ERP, não paga, não escritura, não afirma correção fiscal/jurídica.
-- Simplicidade primeiro: monólito modular, fila em PostgreSQL, sem broker (ADR-006, ADR-009).
+- Simplicidade primeiro: monólito modular, fila em PostgreSQL, sem broker (ADR-018, ADR-004).
 
 ## 2. Contexto (C4 — nível 1)
 
@@ -38,12 +42,12 @@ flowchart TB
     subgraph browser[Navegador]
         spa[Frontend SPA<br/>React + TS + Vite + Tailwind]
     end
-    subgraph runtime[Container Apps / Docker Compose]
+    subgraph runtime[Azure Container Apps — MVP]
         api[API<br/>FastAPI /api/v1]
         worker[Worker<br/>mesmo código do backend]
     end
     db[(PostgreSQL 18<br/>metadados, fila, auditoria)]
-    blob[(Storage de documentos<br/>local ou Azure Blob)]
+    blob[(Azure Blob Storage<br/>documentos)]
     kv[(Azure Key Vault)]
     obs[(App Insights / OpenTelemetry)]
 
@@ -58,18 +62,17 @@ flowchart TB
     worker -. telemetria .-> obs
 ```
 
-| Container  | Responsabilidade                                                 | Local                   | Azure (Sprint 8)         |
-| ---------- | ---------------------------------------------------------------- | ----------------------- | ------------------------ |
-| Frontend   | UI pt-BR, experiência; nenhuma decisão de autorização ou cálculo | Vite dev server / Nginx | Container App (estático) |
-| API        | REST versionada, authN/authZ, orquestração                       | Uvicorn                 | Container App            |
-| Worker     | parsing, matching, ingestão de e-mail, jobs                      | processo Python         | Container App / Job      |
-| PostgreSQL | metadados, fila `job`, auditoria                                 | Docker                  | Flexible Server          |
-| Storage    | arquivos originais, por hash                                     | disco local             | Blob Storage privado     |
+| Container  | Responsabilidade                                                 | MVP (Azure, oficial)                              | Desenvolvimento local         |
+| ---------- | ---------------------------------------------------------------- | ------------------------------------------------- | ----------------------------- |
+| Frontend   | UI pt-BR, experiência; nenhuma decisão de autorização ou cálculo | Container App `ca-gfbr-web-mvp`                   | Vite dev server / Nginx       |
+| API        | REST versionada, authN/authZ, orquestração                       | Container App `ca-gfbr-api-mvp` (ingress interno) | Uvicorn                       |
+| Worker     | parsing, matching, ingestão de e-mail, jobs                      | Container App / Job (Sprint 2+)                   | processo Python               |
+| PostgreSQL | metadados, fila `processing_job`, auditoria                      | Flexible Server 18, `guardiao_financeiro`         | Docker                        |
+| Storage    | arquivos originais e derivados, por hash                         | Blob Storage privado                              | diretório temporário (testes) |
 
-> **Estado (Sprint 1):** API, frontend (Nginx), PostgreSQL e o serviço `migrate` (Alembic +
-> bootstrap) estão implementados e sobem com `docker compose up`. O worker entra quando
-> houver processamento assíncrono (Sprint 2). Health checks: `/api/health/live` e
-> `/api/health/ready`.
+> **Estado (Sprint 0 do plano Cloud-First):** API, frontend (Nginx) e job de migração
+> prontos para o MVP; sondas `GET /health` e `GET /ready` (também em `/api/health/*`) e
+> página pública `/status`. O worker entra com o processamento assíncrono (Sprint 2).
 
 ## 4. Backend — camadas (C4 — nível 3)
 
@@ -90,7 +93,7 @@ backend/app/
 └── config/        # Settings (pydantic-settings), validação de ambiente
 ```
 
-Regras de dependência (ADR-006), verificadas por `backend/tests/architecture/`:
+Regras de dependência (ADR-018), verificadas por `backend/tests/architecture/`:
 
 | Camada                         | Não pode importar                                                                |
 | ------------------------------ | -------------------------------------------------------------------------------- |
@@ -137,12 +140,12 @@ determinística dos resultados das regras (tabela em [`matching-engine.md`](matc
 
 | Tema                     | Abordagem                                                                                                                  | Onde              |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| Dinheiro                 | `Decimal` / `NUMERIC`, tolerâncias configuráveis                                                                           | ADR-007           |
-| Identificador fiscal     | Value object único, CNPJ alfanumérico                                                                                      | ADR-008           |
-| Idempotência             | hash, IDs externos, constraints, `Idempotency-Key`                                                                         | ADR-011           |
-| Concorrência             | advisory lock por documento + optimistic locking                                                                           | ADR-009           |
-| Auditoria                | append-only, grants restritos                                                                                              | ADR-012           |
-| Multitenancy             | `organization_id` em tudo                                                                                                  | ADR-010           |
+| Dinheiro                 | `Decimal` / `NUMERIC`, tolerâncias configuráveis                                                                           | ADR-009           |
+| Identificador fiscal     | Value object único, CNPJ alfanumérico                                                                                      | ADR-012           |
+| Idempotência             | hash, IDs externos, constraints, `Idempotency-Key`                                                                         | ADR-014           |
+| Concorrência             | advisory lock por documento + optimistic locking                                                                           | ADR-004           |
+| Auditoria                | append-only, grants restritos                                                                                              | ADR-015           |
+| Multitenancy             | `organization_id` em tudo                                                                                                  | ADR-013           |
 | Segurança                | ver [`security.md`](security.md) e [`threat-model.md`](threat-model.md)                                                    | —                 |
 | Privacidade              | ver [`lgpd.md`](lgpd.md)                                                                                                   | —                 |
 | Logs                     | JSON estruturado, correlation IDs (`request_id`, `document_id`, `matching_run_id`, `organization_id`), sem dados sensíveis | Sprint 1          |
@@ -154,9 +157,11 @@ determinística dos resultados das regras (tabela em [`matching-engine.md`](matc
 
 ## 8. Portabilidade
 
-- Desenvolvimento: `docker compose up` (PostgreSQL + API + frontend a partir da Sprint 1).
-- Microsoft 365: `MAILBOX_INGESTION_MODE=mock` por padrão.
-- Azure: somente homologação/produção; nenhum recurso criado sem autorização.
+- Ambiente oficial: **MVP** no Azure ([`deployment-azure.md`](deployment-azure.md)).
+- Desenvolvimento e testes locais: `docker compose up` (PostgreSQL + API + frontend) e
+  adapters fake para serviços externos nos testes automatizados.
+- Microsoft 365: Shared Mailbox do MVP desde a Sprint 0; ingestão na Sprint 6.
+- Nenhum recurso de nuvem é criado sem autorização explícita.
 
 ## 9. Evolução prevista
 

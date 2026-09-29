@@ -13,6 +13,8 @@ def build_database_url(settings: Settings) -> URL:
         url = make_url(settings.database_url.get_secret_value())
         if url.drivername in {"postgresql", "postgres"}:
             url = url.set(drivername="postgresql+psycopg")
+        if "sslmode" not in url.query:
+            url = url.update_query_dict({"sslmode": settings.postgres_sslmode})
         return url
     return URL.create(
         drivername="postgresql+psycopg",
@@ -21,6 +23,7 @@ def build_database_url(settings: Settings) -> URL:
         host=settings.postgres_host,
         port=settings.postgres_port,
         database=settings.postgres_db,
+        query={"sslmode": settings.postgres_sslmode},
     )
 
 

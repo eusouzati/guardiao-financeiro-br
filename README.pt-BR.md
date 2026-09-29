@@ -2,7 +2,7 @@
 
 > Plataforma open source de **conferência inteligente de contas a pagar** para o mercado brasileiro.
 
-**Status:** 🚧 Sprint 1 — plataforma base (API, banco, interface). Funcionalidades de negócio começam na Sprint 2.
+**Status:** 🚧 Sprint 0 — fundação cloud do MVP (Azure + Microsoft 365). Funcionalidades de negócio começam na Sprint 2.
 Read in English: [README.md](README.md).
 
 ## O problema
@@ -41,17 +41,21 @@ irreversíveis. O núcleo funciona **sem LLM**.
 - Bancada de exceções com comparação lado a lado, revisão humana e auditoria append-only.
 - Ingestão da caixa de contas a pagar do Microsoft 365 via Graph, restrita a uma caixa.
 - Microsoft Entra ID, RBAC aplicado no backend, LGPD desde a concepção.
-- Implantação no Azure via Bicep.
+- Ambiente único **MVP** no Azure (Container Apps, PostgreSQL 18, Blob Storage, Key Vault)
+  e no Microsoft 365, provisionado por Bicep e scripts idempotentes.
 
 ## Arquitetura
 
-SPA React + TypeScript → monólito modular FastAPI (API + worker) → PostgreSQL e storage de
-documentos (disco local ou Azure Blob). Veja [ARCHITECTURE.md](ARCHITECTURE.md),
-[docs/architecture.md](docs/architecture.md) e as [ADRs](docs/decisions/README.md).
+Cloud-First: SPA React + TypeScript → monólito modular FastAPI (API + worker) no Azure
+Container Apps → Azure PostgreSQL 18 e Azure Blob Storage, com segredos no Key Vault e uma
+Shared Mailbox dedicada no Microsoft 365. Existe um único ambiente, o **MVP**. Veja
+[ARCHITECTURE.md](ARCHITECTURE.md), [docs/cloud-architecture.md](docs/cloud-architecture.md)
+e as [ADRs](docs/decisions/README.md).
 
-## Início rápido
+## Desenvolvimento local
 
-Requisitos: Git e Docker Desktop.
+O ambiente oficial é o MVP no Azure ([docs/deployment-azure.md](docs/deployment-azure.md));
+a máquina local serve para desenvolver e testar. Requisitos: Git e Docker Desktop.
 
 ```bash
 cp .env.example .env         # defina POSTGRES_PASSWORD; para uso local, DEV_AUTH_ENABLED=true
@@ -59,8 +63,8 @@ docker compose up --build    # PostgreSQL + migrations + API + interface
 ```
 
 Acesse <http://localhost:8080> (documentação da API em <http://localhost:8000/api/docs>).
-O login local é simulado e só funciona com `APP_ENV=local`; o Microsoft Entra ID chega na
-Sprint 7.
+O login local é simulado e só funciona com `APP_ENV=local`; no MVP a autenticação é o
+Microsoft Entra ID.
 
 Detalhes em [docs/environment-setup.md](docs/environment-setup.md).
 

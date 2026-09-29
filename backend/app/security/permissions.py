@@ -1,4 +1,4 @@
-"""Matriz perfil x permissão (docs/security.md §3, ADR-004).
+"""Matriz perfil x permissão (docs/security.md §3, ADR-006).
 
 A autorização é sempre decidida no backend. O frontend recebe a lista de permissões
 apenas para adaptar a experiência visual.

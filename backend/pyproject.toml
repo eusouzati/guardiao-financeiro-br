@@ -5,7 +5,7 @@ description = "Backend do Guardião Financeiro BR — conferência inteligente d
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.13,<3.14"
-# Cada dependência tem função registrada em docs/dependencies.md (ADR-018).
+# Cada dependência tem função registrada em docs/dependencies.md (ADR-020).
 dependencies = [
     "alembic==1.20.0",           # migrations
     "fastapi==0.141.1",          # API HTTP + OpenAPI
@@ -66,7 +66,7 @@ known-third-party = ["alembic"]
 "migrations/versions/**" = ["E501"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"decimal.getcontext".msg = "Não altere o contexto global de Decimal; use app.domain.money (ADR-007)."
+"decimal.getcontext".msg = "Não altere o contexto global de Decimal; use app.domain.money (ADR-009)."
 
 [tool.ruff.format]
 quote-style = "double"

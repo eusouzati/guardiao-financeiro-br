@@ -45,9 +45,9 @@ if (-not $oid) {
     if (-not $roles) { Warn 'Nenhuma atribuicao de papel encontrada (ou sem permissao para listar).' }
     else { $roles | Format-Table -AutoSize | Out-String | Write-Host }
     $names = @($roles | ForEach-Object { $_.Papel })
-    if ($names -contains 'Owner') { Ok 'Owner encontrado: suficiente para a Sprint 1A.' }
+    if ($names -contains 'Owner') { Ok 'Owner encontrado: suficiente para a Sprint 0 do MVP.' }
     elseif (($names -contains 'Contributor') -and (($names -contains 'User Access Administrator') -or ($names -contains 'Role Based Access Control Administrator'))) {
-        Ok 'Contributor + administracao de RBAC: suficiente para a Sprint 1A.'
+        Ok 'Contributor + administracao de RBAC: suficiente para a Sprint 0 do MVP.'
     } elseif ($names -contains 'Contributor') {
         Warn 'Somente Contributor: cria recursos, mas NAO atribui papeis as Managed Identities (AcrPull, Key Vault, Blob).'
     } else { Fail 'Permissao insuficiente para criar recursos.' }
@@ -55,7 +55,8 @@ if (-not $oid) {
 
 Section 'Resource providers necessarios'
 $providers = 'Microsoft.App','Microsoft.ContainerRegistry','Microsoft.DBforPostgreSQL','Microsoft.Storage',
-             'Microsoft.KeyVault','Microsoft.OperationalInsights','Microsoft.Insights','Microsoft.ManagedIdentity'
+             'Microsoft.KeyVault','Microsoft.OperationalInsights','Microsoft.Insights','Microsoft.ManagedIdentity',
+             'Microsoft.Network','Microsoft.Consumption'
 foreach ($p in $providers) {
     $state = az provider show -n $p --query registrationState -o tsv 2>$null
     if ($state -eq 'Registered') { Ok "$p" } else { Warn "$p = $state  (registro e gratuito: az provider register -n $p)" }
@@ -71,15 +72,15 @@ az postgres flexible-server list-skus --location $Location -o none 2>$null
 if ($LASTEXITCODE -eq 0) { Ok "PostgreSQL Flexible Server consultavel em $locName (restricoes de SKU/cota aparecem no what-if)" }
 else { Warn "Nao foi possivel consultar SKUs do PostgreSQL Flexible em $Location (pode haver restricao para esta assinatura)" }
 
-Section 'Entra ID (apenas se optarmos por Easy Auth na Sprint 1A)'
+Section 'Entra ID (App Registrations do MVP)'
 $canCreate = az rest --method get --url 'https://graph.microsoft.com/v1.0/policies/authorizationPolicy' `
     --query 'defaultUserRolePermissions.allowedToCreateApps' -o tsv 2>$null
 if ($canCreate -eq 'true') { Ok 'Usuarios podem registrar aplicativos no tenant.' }
 elseif ($canCreate -eq 'false') { Warn 'Registro de apps restrito: seria preciso o papel Application Developer.' }
 else { Warn 'Nao foi possivel verificar a politica de registro de apps (normal sem permissao de leitura de politicas).' }
 
-Section 'Grupos de recursos existentes com prefixo rg-guardiao'
-az group list --query "[?starts_with(name,'rg-guardiao')].{Nome:name, Regiao:location}" -o table
+Section 'Grupos de recursos existentes do projeto (prefixo rg-gfb)'
+az group list --query "[?starts_with(name,'rg-gfb')].{Nome:name, Regiao:location}" -o table
 
 Write-Host ''
 Write-Host 'Diagnostico concluido. Nada foi criado ou alterado.' -ForegroundColor Green

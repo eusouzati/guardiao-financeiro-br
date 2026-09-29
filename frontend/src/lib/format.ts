@@ -1,7 +1,7 @@
 /**
  * Formatação pt-BR somente para exibição.
  *
- * Valores decimais chegam da API como string (ADR-007) e são formatados por manipulação
+ * Valores decimais chegam da API como string (ADR-009) e são formatados por manipulação
  * de texto — sem conversão para número de ponto flutuante, preservando todas as casas.
  */
 

@@ -81,6 +81,20 @@ describe('aplicação', () => {
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
   });
 
+  it('mostra botão Sair e aviso de perfil ausente no login via Entra (Easy Auth)', async () => {
+    mockFetch({
+      '/api/v1/me': { body: { ...DEV_ME, auth_method: 'EASY_AUTH', roles: [], permissions: [] } },
+      '/api/health/ready': { body: READY },
+    });
+    renderApp('/');
+    expect(await screen.findByRole('link', { name: 'Sair' })).toHaveAttribute(
+      'href',
+      '/.auth/logout?post_logout_redirect_uri=/',
+    );
+    expect(screen.getByText('Sem perfil atribuído')).toBeInTheDocument();
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+
   it('orienta o usuário quando não autenticado', async () => {
     mockFetch({
       '/api/v1/me': {

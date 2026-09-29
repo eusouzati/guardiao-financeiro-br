@@ -10,10 +10,13 @@ import {
 } from '../pages/ModulePages';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { SettingsPage } from '../pages/SettingsPage';
+import { StatusPage } from '../pages/StatusPage';
 import { AppLayout } from './AppLayout';
 import { SessionProvider } from './session';
 
 export const routes: RouteObject[] = [
+  // Pública: não depende de sessão (verificação operacional do MVP).
+  { path: 'status', element: <StatusPage /> },
   {
     element: (
       <SessionProvider>

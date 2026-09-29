@@ -63,6 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
+    app.include_router(health.probe_router)
     app.include_router(health.router)
     app.include_router(v1.router)
     return app

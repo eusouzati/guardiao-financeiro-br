@@ -144,7 +144,7 @@ def upgrade() -> None:
         "ix_audit_event_org_occurred_at", "audit_event", ["organization_id", "occurred_at"]
     )
 
-    # Append-only (ADR-012): bloqueia UPDATE/DELETE por linha e TRUNCATE por comando.
+    # Append-only (ADR-015): bloqueia UPDATE/DELETE por linha e TRUNCATE por comando.
     op.execute(APPEND_ONLY_FUNCTION)
     for table in APPEND_ONLY_TABLES:
         op.execute(

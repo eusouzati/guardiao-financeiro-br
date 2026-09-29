@@ -11,7 +11,7 @@ from app.models.configuration import ConfigurationEntry
 
 
 class ConfigurationRepository:
-    """Sobrescritas versionadas de políticas, sempre escopadas por organização (ADR-010)."""
+    """Sobrescritas versionadas de políticas, sempre escopadas por organização (ADR-013)."""
 
     def __init__(self, session: Session) -> None:
         self._session = session

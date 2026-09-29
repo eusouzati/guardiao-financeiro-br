@@ -76,7 +76,7 @@ class PolicyDefinition:
 
 
 def serialize_policy_value(value: PolicyValue) -> bool | int | str:
-    """Representação JSON segura: Decimal vira string, nunca float (ADR-007)."""
+    """Representação JSON segura: Decimal vira string, nunca float (ADR-009)."""
     if isinstance(value, bool | int):
         return value
     return str(value)

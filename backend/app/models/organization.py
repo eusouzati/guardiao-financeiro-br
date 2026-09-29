@@ -7,12 +7,12 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 
 class Organization(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """Empresa usuária. No MVP há uma organização por implantação (ADR-010)."""
+    """Empresa usuária. No MVP há uma organização por implantação (ADR-013)."""
 
     __tablename__ = "organization"
     __table_args__ = (
         CheckConstraint("status IN ('ACTIVE', 'INACTIVE')", name="status_valid"),
-        # CNPJ normalizado (ADR-008): 12 posições alfanuméricas + 2 dígitos verificadores.
+        # CNPJ normalizado (ADR-012): 12 posições alfanuméricas + 2 dígitos verificadores.
         CheckConstraint(
             "tax_id IS NULL OR tax_id ~ '^[0-9A-Z]{12}[0-9]{2}$'", name="tax_id_format"
         ),

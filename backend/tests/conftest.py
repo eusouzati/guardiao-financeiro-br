@@ -108,8 +108,16 @@ def client_factory(session_factory: sessionmaker[Session]) -> Iterator[ClientFac
     """Cria TestClient com DEV auth (APP_ENV=local) ligado ao banco transacional do teste."""
     clients: list[TestClient] = []
 
-    def _factory(roles: frozenset[Role] = frozenset({Role.ADMIN})) -> TestClient:
-        settings = make_settings(app_env=AppEnv.LOCAL, dev_auth_enabled=True, dev_auth_roles=roles)
+    def _factory(
+        roles: frozenset[Role] = frozenset({Role.ADMIN}), **overrides: object
+    ) -> TestClient:
+        values: dict[str, object] = {
+            "app_env": AppEnv.LOCAL,
+            "dev_auth_enabled": True,
+            "dev_auth_roles": roles,
+        }
+        values.update(overrides)
+        settings = make_settings(**values)
         app: FastAPI = create_app(settings)
         client = TestClient(app, raise_server_exceptions=False)
         client.__enter__()

@@ -1,4 +1,12 @@
-"""Health checks (sem autenticação; sem dados sensíveis)."""
+"""Health checks (sem autenticação; sem dados sensíveis).
+
+Rotas expostas:
+
+- ``GET /health`` e ``GET /ready`` — sondas do Azure Container Apps (liveness/readiness)
+  e verificação operacional do MVP (Sprint 0);
+- ``GET /api/health/live`` e ``GET /api/health/ready`` — mesmas respostas sob o prefixo
+  ``/api``, alcançáveis pelo frontend através do proxy reverso.
+"""
 
 from __future__ import annotations
 
@@ -11,9 +19,13 @@ from app.schemas.health import LivenessResponse, ReadinessResponse
 from app.services.health import check_database
 
 router = APIRouter(prefix="/api/health", tags=["health"])
+probe_router = APIRouter(tags=["health"])
+
+_READY_RESPONSES: dict[int | str, dict[str, object]] = {503: {"model": ReadinessResponse}}
 
 
 @router.get("/live", response_model=LivenessResponse, summary="Processo em execução")
+@probe_router.get("/health", response_model=LivenessResponse, summary="Processo em execução")
 def live() -> LivenessResponse:
     return LivenessResponse(status="ok")
 
@@ -22,7 +34,13 @@ def live() -> LivenessResponse:
     "/ready",
     response_model=ReadinessResponse,
     summary="Pronto para receber tráfego (banco acessível e migrado)",
-    responses={503: {"model": ReadinessResponse}},
+    responses=_READY_RESPONSES,
+)
+@probe_router.get(
+    "/ready",
+    response_model=ReadinessResponse,
+    summary="Pronto para receber tráfego (banco acessível e migrado)",
+    responses=_READY_RESPONSES,
 )
 def ready(settings: SettingsDep, session: SessionDep) -> ReadinessResponse | JSONResponse:
     db = check_database(session)

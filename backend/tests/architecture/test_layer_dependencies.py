@@ -1,4 +1,4 @@
-"""Garante as regras de dependência entre camadas do backend (ADR-006).
+"""Garante as regras de dependência entre camadas do backend (ADR-018).
 
 O teste analisa estaticamente (AST) os imports de cada módulo em ``app/`` e falha se uma
 camada importar outra que lhe é proibida — por exemplo, ``parsers`` importando ``models``
@@ -125,7 +125,7 @@ def test_every_layer_directory_is_classified() -> None:
     directories = {p.name for p in APP_DIR.iterdir() if p.is_dir() and p.name != "__pycache__"}
     assert directories == LAYERS, (
         "Toda nova camada em app/ precisa ser classificada em LAYERS "
-        "e ter regras de dependência avaliadas (ADR-006)."
+        "e ter regras de dependência avaliadas (ADR-018)."
     )
 
 

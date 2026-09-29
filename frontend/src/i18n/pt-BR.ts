@@ -1,4 +1,4 @@
-/** Textos da interface (pt-BR), centralizados para revisão (ADR-013). */
+/** Textos da interface (pt-BR), centralizados para revisão (ADR-010). */
 export const t = {
   appName: 'Guardião Financeiro BR',
   appTagline: 'Conferência inteligente de contas a pagar',
@@ -15,13 +15,23 @@ export const t = {
     suppliers: 'Fornecedores',
     settings: 'Configurações',
   },
+  signOut: 'Sair',
+  noRoleAssigned: 'Sem perfil atribuído',
   devAuthBanner:
     'Ambiente local com autenticação de desenvolvimento simulada. Não utilize dados reais.',
+  statusPage: {
+    environment: 'MVP',
+    apiStatus: 'Status da API',
+    checking: 'Verificando…',
+    version: 'Versão',
+    refresh: 'Verificar novamente',
+    link: 'Ver status da aplicação',
+  },
   session: {
     loading: 'Carregando sua sessão…',
     notAuthenticatedTitle: 'Autenticação necessária',
     notAuthenticatedHelp:
-      'O login com Microsoft Entra ID será habilitado na Sprint 7. Em ambiente local, defina DEV_AUTH_ENABLED=true no arquivo .env e reinicie o backend.',
+      'O login com Microsoft Entra ID ainda não está habilitado neste ambiente. Em ambiente local, defina DEV_AUTH_ENABLED=true no arquivo .env e reinicie o backend.',
     orgNotInitializedTitle: 'Organização não inicializada',
     genericErrorTitle: 'Não foi possível carregar a aplicação',
   },

@@ -1,4 +1,4 @@
-"""Perfis de acesso (ADR-004)."""
+"""Perfis de acesso (ADR-006)."""
 
 from __future__ import annotations
 

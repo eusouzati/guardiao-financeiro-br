@@ -54,16 +54,30 @@ A matriz final é validada na Sprint 7 e coberta por testes.
 
 ## 4. Ambientes
 
-| Ambiente             | `APP_ENV`      | Auth                    | Integrações externas   |
-| -------------------- | -------------- | ----------------------- | ---------------------- |
-| Local                | `local`        | DEV simulada (opcional) | mocks                  |
-| Testes automatizados | `test`         | stubs de token          | mocks                  |
-| Homologação          | `homologation` | Entra ID                | reais, com autorização |
-| Produção             | `production`   | Entra ID                | reais, com autorização |
+Existe um único ambiente de nuvem, o **MVP** ([ADR-001](decisions/ADR-001-mvp-cloud-first.md)).
 
-## 5. Verificações da Sprint 0
+| Contexto             | `APP_ENV` | Auth                                                       | Integrações externas               |
+| -------------------- | --------- | ---------------------------------------------------------- | ---------------------------------- |
+| Máquina local        | `local`   | DEV simulada (opcional, bloqueada fora de `local`)         | adapters fake                      |
+| Testes automatizados | `test`    | stubs                                                      | adapters fake                      |
+| MVP (Azure)          | `mvp`     | Entra ID (Easy Auth a partir da Sprint 1; JWT na Sprint 7) | Azure e Microsoft 365 reais do MVP |
 
-- Nenhum segredo, token, connection string ou credencial real no repositório.
-- `.env` ignorado pelo Git; `.env.example` apenas com placeholders.
-- PostgreSQL local publicado apenas em `127.0.0.1`; senha obrigatória via `.env`.
-- Nenhuma integração externa ativa; nenhum recurso Azure/M365 criado.
+## 5. Verificações da Sprint 0 (MVP)
+
+- Nenhum segredo, token, connection string ou credencial real no repositório (gitleaks).
+- `.env` ignorado pelo Git; `.env.example` apenas com placeholders; nenhum tenant, domínio
+  ou ID de assinatura real versionado.
+- ACR sem admin user e sem pull anônimo; pull por identidade gerenciada.
+- Storage sem acesso público a blobs e sem chave compartilhada; containers privados;
+  HTTPS e TLS 1.2+.
+- Key Vault com RBAC, soft delete e purge protection; único segredo: senha administrativa
+  do PostgreSQL (bootstrap).
+- PostgreSQL sem acesso público (VNet, ADR-011), TLS obrigatório, sem HA, backup 7 dias.
+- API sem ingress externo; frontend HTTPS com cabeçalhos de segurança; rotas protegidas
+  respondem 401 sem autenticação.
+- Identidades de runtime sem `Owner`/`Contributor` (menor privilégio).
+- App de e-mail limitado à Shared Mailbox do MVP por RBAC for Applications, sem permissão
+  Graph no Entra ID.
+- Logs sem conteúdo de documentos nem segredos.
+- Verificação automatizada: `scripts/azure/test-mvp.ps1` e `infra/m365/Test-MailboxAccess.ps1`
+  ([`sprint-0/README.md`](sprint-0/README.md)).

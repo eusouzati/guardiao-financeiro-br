@@ -32,10 +32,21 @@ if (Test-Tool 'docker' $true 'docker' @('--version') 'instale o Docker Desktop')
     else { Write-Missing 'docker engine' 'parado: abra o Docker Desktop e aguarde "Engine running"' }
 }
 
+$py = 'python'
+if (-not (Get-Command python -ErrorAction SilentlyContinue) -and (Get-Command py -ErrorAction SilentlyContinue)) { $py = 'py' }
+[void](Test-Tool 'python' $true $py @('--version') 'instale o Python 3.13 (ou deixe o uv gerenciar: uv python install 3.13)')
 [void](Test-Tool 'uv' $true 'uv' @('--version') 'instale: winget install --id=astral-sh.uv -e  (depois abra um novo terminal)')
-[void](Test-Tool 'node' $false 'node' @('--version'))
-[void](Test-Tool 'npm' $false 'npm' @('--version'))
-[void](Test-Tool 'az (Azure CLI)' $false 'az' @('--version'))
+[void](Test-Tool 'node' $true 'node' @('--version') 'instale o Node.js 24 LTS')
+[void](Test-Tool 'npm' $true 'npm' @('--version') 'acompanha o Node.js')
+
+Write-Host 'Nuvem (deploy do MVP)'
+if (Test-Tool 'az (Azure CLI)' $true 'az' @('--version') 'instale: winget install -e --id Microsoft.AzureCLI') {
+    $bicep = (& az bicep version 2>&1 | Where-Object { "$_" -match 'Bicep CLI version' } | Select-Object -First 1)
+    if ($bicep) { Write-Ok 'bicep' "$bicep" } else { Write-Missing 'bicep' 'instale: az bicep install' }
+}
+[void](Test-Tool 'pwsh (PowerShell 7)' $false 'pwsh' @('--version'))
+if (Get-Module -ListAvailable -Name ExchangeOnlineManagement) { Write-Ok 'ExchangeOnline' 'modulo ExchangeOnlineManagement presente' }
+else { Write-Host ('  [--]    {0,-16} {1}' -f 'ExchangeOnline', 'modulo ausente: necessario para infra/m365 (Install-Module ExchangeOnlineManagement -Scope CurrentUser)') }
 [void](Test-Tool 'gh' $false 'gh' @('--version'))
 
 if (Test-Path '.env') {

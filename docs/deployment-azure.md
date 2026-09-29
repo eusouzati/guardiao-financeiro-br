@@ -1,98 +1,126 @@
-# Implantação no Azure
+# Implantação no Azure — ambiente MVP
 
-> **Status: planejado.** Ambiente `dev` na **Sprint 1A** (ADR-017); `hml`/`prod` na
-> **Sprint 8** (ADR-014). Nenhum recurso é criado sem estimativa de custo, `what-if` e
-> autorização explícita do mantenedor.
+> Único ambiente do projeto: **MVP** ([ADR-001](decisions/ADR-001-mvp-cloud-first.md)).
+> Nenhum recurso é criado sem `what-if`, estimativa de custo e a autorização
+> **"AUTORIZAR DEPLOY MVP DA SPRINT 0"**. Arquitetura: [`cloud-architecture.md`](cloud-architecture.md).
 
-## 1. Arquitetura alvo
+## 1. Variáveis obrigatórias
 
-| Recurso                                       | Uso                         | Observações                                                                |
-| --------------------------------------------- | --------------------------- | -------------------------------------------------------------------------- |
-| Azure Container Apps (+ environment)          | API, frontend, worker       | Managed Identity; escala mínima 0/1 conforme ambiente                      |
-| Azure Container Registry                      | Imagens                     | Pull via Managed Identity (AcrPull), sem admin user                        |
-| Azure Database for PostgreSQL Flexible Server | Metadados                   | PostgreSQL 18; rede privada ou firewall restrito; Entra auth quando viável |
-| Storage Account / Blob                        | Documentos originais        | Privado, soft delete, versionamento, sem acesso público                    |
-| Azure Key Vault                               | Segredos, certificado Graph | RBAC, soft delete, purge protection                                        |
-| Application Insights + Log Analytics          | Observabilidade             | Sem documentos em telemetria; retenção definida                            |
-| Microsoft Entra ID                            | Identidade                  | App registrations: SPA, API, ingestão Graph                                |
+Informadas na sessão do PowerShell de quem faz o deploy — **nunca** versionadas.
 
-## 2. Acessos necessários (Sprint 1A)
+| Variável                   | Uso                                            | Sugestão                    |
+| -------------------------- | ---------------------------------------------- | --------------------------- |
+| `AZURE_SUBSCRIPTION_ID`    | Assinatura esperada (o script para se diferir) | —                           |
+| `AZURE_TENANT_ID`          | Tenant esperado (o script para se diferir)     | —                           |
+| `AZURE_REGION`             | Região dos recursos                            | `brazilsouth`               |
+| `RESOURCE_PREFIX`          | Prefixo dos nomes                              | `gfbr`                      |
+| `PROJECT_OWNER`            | Tag `owner`                                    | nome ou apelido, sem e-mail |
+| `M365_TENANT_DOMAIN`       | Domínio do Microsoft 365                       | —                           |
+| `MVP_SHARED_MAILBOX_ALIAS` | Alias da Shared Mailbox                        | `guardiao-financeiro-mvp`   |
+| `MVP_ADMIN_USER`           | Administrador que executa os scripts M365      | —                           |
+
+Orçamento: `MVP_BUDGET_AMOUNT` (ou `-BudgetAmount`; padrão 50, na **moeda de cobrança**
+da assinatura) e `MVP_BUDGET_EMAILS` (ou `-BudgetEmails`; lista separada por vírgula). Sem
+e-mails, o orçamento não é criado e o passo manual de
+[`cost-management.md`](cost-management.md) se aplica.
+
+Recomendação: manter esses valores num arquivo local `.azure/mvp.env.ps1` (a pasta
+`.azure/` é ignorada pelo Git) com linhas `$env:NOME = 'valor'` e carregá-lo na sessão com
+`. ./.azure/mvp.env.ps1`.
+
+## 2. Acessos necessários
 
 Diagnóstico somente leitura: `./scripts/azure/check-access.ps1` (após `az login`).
 
-| #   | Acesso                                | Por quê                                                              | Mínimo recomendado                                                                                                                   |
-| --- | ------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Assinatura Azure definida             | Onde os recursos `dev` serão criados                                 | Assinatura ativa; preferencialmente dedicada ou, no mínimo, grupo de recursos `rg-guardiao-dev` exclusivo                            |
-| 2   | Sessão da Azure CLI do mantenedor     | Executar build/validate/what-if/deploy                               | `az login` na máquina do mantenedor; **nenhuma credencial é compartilhada no chat nem gravada no repositório**                       |
-| 3   | Criar recursos                        | Container Apps, ACR, PostgreSQL, Storage, Key Vault, monitoramento   | `Contributor` no grupo de recursos (ou `Owner` da assinatura)                                                                        |
-| 4   | Atribuir papéis às Managed Identities | `AcrPull`, `Key Vault Secrets User`, `Storage Blob Data Contributor` | `Role Based Access Control Administrator` no grupo de recursos, idealmente com condição limitando a esses papéis (ou `Owner`)        |
-| 5   | Resource providers registrados        | Pré-requisito dos serviços                                           | `Microsoft.App`, `ContainerRegistry`, `DBforPostgreSQL`, `Storage`, `KeyVault`, `OperationalInsights`, `Insights`, `ManagedIdentity` |
-| 6   | Orçamento com alerta                  | Evitar surpresa de custo                                             | Budget mensal no grupo de recursos com alertas (ex.: 50/80/100%)                                                                     |
-| 7   | Barreira de acesso ao `dev`           | Entra ID completo só na Sprint 7                                     | IP público do mantenedor **ou** permissão para registrar app no Entra (Easy Auth)                                                    |
-| 8   | (Sprint 9) GitHub → Azure via OIDC    | CI/CD sem segredo                                                    | App registration/identidade com federated credential, escopo mínimo por environment                                                  |
+| Acesso                                                                               | Por quê                                                                                                                                                        |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Owner` na assinatura (ou `Contributor` + `Role Based Access Control Administrator`) | Criar recursos e atribuir papéis às identidades gerenciadas                                                                                                    |
+| Resource providers registrados                                                       | `Microsoft.App`, `ContainerRegistry`, `DBforPostgreSQL`, `Storage`, `KeyVault`, `OperationalInsights`, `Insights`, `ManagedIdentity`, `Network`, `Consumption` |
+| Docker Desktop em execução                                                           | Build das imagens de bootstrap na fase `apps`                                                                                                                  |
+| Registro de aplicativos no Entra ID                                                  | App Registrations do MVP ([`microsoft-365.md`](microsoft-365.md))                                                                                              |
+| Exchange Administrator                                                               | Shared Mailbox e RBAC for Applications                                                                                                                         |
 
-### 2.1 Situação verificada do ambiente `dev` (2026-09-26)
+## 3. Recursos
 
-Diagnóstico `check-access.ps1` executado pelo mantenedor (IDs de assinatura/tenant
-**não** são registrados no repositório):
+Naming: `<tipo>-<prefixo>-<ambiente>`; nomes globais recebem um sufixo estável de 6
+caracteres derivado da assinatura (`uniqueString`).
 
-- Assinatura do tipo **Free Trial** (`quotaId FreeTrial_2014-09-01`), estado `Enabled`.
-- Usuário com papel **Owner** na assinatura → itens 3 e 4 atendidos.
-- Bicep CLI instalado; região **`brazilsouth`** confirmada pelo mantenedor; Container Apps
-  e PostgreSQL Flexible consultáveis na região.
-- Resource providers necessários **todos registrados** (`Microsoft.App`, `ContainerRegistry`,
-  `DBforPostgreSQL` e `KeyVault` registrados pelo mantenedor em 2026-09-26).
-- Tenant permite registro de aplicativos (Easy Auth é viável).
+| Recurso                    | Nome                                           | Configuração                                                                                                                                                                |
+| -------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Grupo de recursos          | `rg-gfbr-mvp`                                  | tags `project`, `environment`, `managed-by`, `owner`, `data-classification`                                                                                                 |
+| VNet (ADR-011, opção A)    | `vnet-gfbr-mvp`                                | `10.60.0.0/22`; sub-redes `snet-container-apps` (/24) e `snet-postgres` (/28)                                                                                               |
+| Zona DNS privada           | `gfbr-mvp.private.postgres.database.azure.com` | vinculada à VNet                                                                                                                                                            |
+| Log Analytics              | `log-gfbr-mvp`                                 | retenção 30 dias, limite de 0,2 GB/dia                                                                                                                                      |
+| Application Insights       | `appi-gfbr-mvp`                                | baseado no workspace                                                                                                                                                        |
+| Identidades gerenciadas    | `id-gfbr-api-mvp`, `id-gfbr-web-mvp`           | api: AcrPull, Key Vault Secrets User, Storage Blob Data Contributor; web: AcrPull                                                                                           |
+| Container Registry         | `acrgfbrmvp<sufixo>`                           | Basic, sem admin user, sem pull anônimo                                                                                                                                     |
+| Key Vault                  | `kv-gfbr-mvp-<sufixo>`                         | RBAC, soft delete 7 dias, purge protection                                                                                                                                  |
+| Storage Account            | `stgfbrmvp<sufixo>`                            | Standard LRS, HTTPS/TLS 1.2, sem acesso público, sem chave compartilhada, versionamento, soft delete; containers `documents-raw`, `documents-derived`, `imports`, `exports` |
+| PostgreSQL Flexible Server | `psql-gfbr-mvp-<sufixo>`                       | v18, Burstable B1ms, 32 GB, backup 7 dias, sem HA, TLS, sem acesso público (VNet), database `guardiao_financeiro`                                                           |
+| Container Apps environment | `cae-gfbr-mvp`                                 | workload profiles, perfil Consumption; grupo gerenciado `rg-gfbr-mvp-cae-infra`                                                                                             |
+| Container App (API)        | `ca-gfbr-api-mvp`                              | ingress interno; `/health` e `/ready`; 0,25 vCPU / 0,5 GiB; escala 0–1                                                                                                      |
+| Container App (frontend)   | `ca-gfbr-web-mvp`                              | ingress externo HTTPS; página pública `/status`; escala 0–1                                                                                                                 |
+| Container Apps job         | `caj-gfbr-migrate-mvp`                         | manual: `alembic upgrade head`                                                                                                                                              |
+| Orçamento                  | `budget-gfbr-mvp`                              | mensal no grupo de recursos; alertas 50/80/100% real e 100% previsto                                                                                                        |
 
-### 2.2 Restrições de uma assinatura Free Trial
+## 4. Procedimento
 
-- Crédito promocional por tempo limitado (30 dias na oferta atual) e limite de gastos:
-  ao terminar, sem migração para pay-as-you-go, a assinatura é desativada e os recursos
-  param. Para manter os serviços gratuitos de 12 meses é preciso migrar para
-  pay-as-you-go dentro do prazo indicado pela Microsoft.
-- Cost Management tem suporte limitado para Free Trial; orçamentos podem não estar
-  disponíveis — o limite de gastos da conta é a proteção principal enquanto durar.
-- Algumas combinações região/SKU (especialmente PostgreSQL Flexible) podem ser
-  bloqueadas para assinaturas de avaliação; o `what-if`/deploy revela isso.
-- Por isso o Bicep do `dev` usa **somente SKUs mínimos**: PostgreSQL Burstable B1ms sem HA
-  e sem backup geo-redundante, Container Apps em consumo com escala a zero, ACR Basic,
-  Storage LRS, Log Analytics com limite diário de ingestão e retenção mínima.
-- Tudo parametrizado: migrar o `dev` para outra assinatura é trocar parâmetros.
+Pré-requisitos: Azure CLI com Bicep, PowerShell, Docker Desktop, `az login --tenant <tenant>`.
 
-### 2.3 Decisões para o `dev`
+```powershell
+$env:AZURE_SUBSCRIPTION_ID = '<assinatura>'
+$env:AZURE_TENANT_ID       = '<tenant>'
+$owner = '<responsavel>'
 
-- Uso apenas durante o trial (sem pay-as-you-go); ambiente descartável e recriável.
-- Barreira de acesso: Easy Auth com Entra ID restrito ao tenant do mantenedor.
-- Crédito do trial verificado no portal em 26/09/2026: US$ 199,99 restantes, expirando em
-  26 dias (por volta de 22/10/2026). A Sprint 1A precisa ser executada e validada antes disso.
+./scripts/check-env.ps1                          # ferramentas
+./scripts/azure/check-access.ps1                 # permissões, providers, região (somente leitura)
+./scripts/azure/estimate-cost.ps1                # estimativa (API pública de preços)
 
-## 3. Parâmetros
+# Fase base — fundação (nada é criado com -WhatIf)
+./scripts/azure/deploy-mvp.ps1 -Phase base -ProjectOwner $owner -BudgetEmails '<email>' -WhatIf
+./scripts/azure/deploy-mvp.ps1 -Phase base -ProjectOwner $owner -BudgetEmails '<email>'
 
-- `environment`: `dev` | `hml` | `prod`
-- `location`: padrão sugerido `brazilsouth` (parâmetro; ver `lgpd.md` §4)
-- SKUs por ambiente (ex.: Burstable em dev/hml).
+# Fase apps — imagens de bootstrap, aplicações e migrations
+./scripts/azure/deploy-mvp.ps1 -Phase apps -ProjectOwner $owner -WhatIf
+./scripts/azure/deploy-mvp.ps1 -Phase apps -ProjectOwner $owner
 
-## 4. Estrutura prevista
-
-```text
-infra/
-├── main.bicep
-├── parameters/
-│   ├── dev.bicepparam
-│   ├── hml.bicepparam
-│   └── prod.bicepparam
-└── modules/
-    ├── container-app.bicep
-    ├── database.bicep
-    ├── storage.bicep
-    ├── keyvault.bicep
-    ├── monitoring.bicep
-    └── registry.bicep
+./scripts/azure/test-mvp.ps1                     # validação de segurança e saúde (somente leitura)
 ```
 
-## 5. A documentar nas Sprints 1A (dev) e 8 (hml/prod)
+Em seguida, Microsoft 365: [`../infra/m365/README.md`](../infra/m365/README.md).
 
-- Custos recorrentes estimados por ambiente e recursos que podem ser desligados.
-- Procedimento de implantação (validate → what-if → aprovação → deploy).
-- Backup/restauração testados ([`backup-recovery.md`](backup-recovery.md)).
-- Configuração OIDC GitHub → Azure (federated credentials por environment).
+- Antes de criar, o script mostra assinatura, tenant e usuário e **para** se não forem os
+  esperados; depois exige digitar `CONFIRMAR`.
+- A senha administrativa do PostgreSQL é gerada pelo script, passada ao Bicep por variável
+  de ambiente da sessão (removida ao final) e guardada somente no Key Vault; nunca aparece
+  em tela, arquivo ou linha de comando.
+- Estado local (nomes gerados, tag das imagens, início do orçamento) fica em
+  `.azure/mvp.json`, ignorado pelo Git.
+- Atualizar apenas as aplicações: `deploy-mvp.ps1 -Phase apps` (nova tag de imagem).
+- A opção de rede B do ADR-011 é `-PrivateNetwork $false` e só pode ser escolhida **antes**
+  de criar o PostgreSQL.
+
+## 5. Como acessar
+
+- Frontend: `https://ca-gfbr-web-mvp.<domínio-do-ambiente>/status` (URL impressa pelo
+  script e gravada em `.azure/mvp.json`).
+- API: sem endereço público; o frontend a alcança em `/api/*`. Health check público:
+  `/api/health/ready` (sem dados sensíveis).
+- PostgreSQL: sem acesso a partir da internet (ADR-011). Migrations e tarefas
+  administrativas rodam como job dentro do ambiente.
+- Logs: Log Analytics `log-gfbr-mvp` (tabelas `ContainerAppConsoleLogs_CL` e
+  `ContainerAppSystemLogs_CL`).
+
+## 6. Parâmetros do Bicep
+
+`infra/azure/main.bicep` recebe `environment` (hoje só `mvp`), `location`,
+`resourcePrefix`, `owner`, `tags` e `sku` (registro, storage, PostgreSQL e logs — tipo em
+`infra/azure/types.bicep`), além de `enablePrivateNetwork`, faixas de rede e orçamento.
+Valores dinâmicos chegam por `parameters/mvp.bicepparam` via variáveis `GFBR_*` definidas
+pelo script.
+
+## 7. Custos, backup e remoção
+
+- Custos e classificação: [`cost-management.md`](cost-management.md).
+- Backup e restauração: [`backup-restore.md`](backup-restore.md).
+- Remoção (nunca automática): [`teardown-mvp.md`](teardown-mvp.md).

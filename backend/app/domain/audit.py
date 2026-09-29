@@ -1,4 +1,4 @@
-"""Tipos de eventos de auditoria (ADR-012)."""
+"""Tipos de eventos de auditoria (ADR-015)."""
 
 from __future__ import annotations
 
