@@ -38,6 +38,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2025-05-01' = {
         name: 'snet-postgres'
         properties: {
           addressPrefix: postgresSubnetPrefix
+          // O PostgreSQL adiciona este service endpoint ao usar a sub-rede; declará-lo evita
+          // que reimplantações o removam (apareceu como remoção no what-if da fase apps).
+          serviceEndpoints: [
+            { service: 'Microsoft.Storage' }
+          ]
           delegations: [
             {
               name: 'postgres-flexible'
