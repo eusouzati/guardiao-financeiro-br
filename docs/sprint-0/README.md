@@ -1,8 +1,8 @@
 # Sprint 0 — MVP Cloud Foundation & Microsoft 365 Foundation
 
 > Evidências da Sprint 0. **Sem segredos:** nenhum valor de senha, token, client secret,
-> ID de assinatura/tenant ou domínio real é registrado aqui. Seções marcadas com ⏳ são
-> preenchidas após a autorização **"AUTORIZAR DEPLOY MVP DA SPRINT 0"**.
+> ID de assinatura/tenant/aplicativo ou domínio real é registrado aqui. Deploy autorizado
+> pelo responsável em 2026-09-29 ("AUTORIZAR DEPLOY MVP DA SPRINT 0") e executado na mesma data.
 
 ## 1. Arquitetura
 
@@ -52,21 +52,87 @@ caixa.
     -AdminUser '<admin>' -OutOfScopeMailbox '<outra-caixa>'
 ```
 
-## 5. Recursos criados ⏳
+## 5. Recursos criados (2026-09-29)
 
-Preencher com a saída não sensível de `az resource list -g rg-gfbr-mvp -o table` e com o
-resultado de `test-mvp.ps1`.
+### Azure — grupo `rg-gfbr-mvp` (`brazilsouth`)
 
-## 6. Outputs não sensíveis ⏳
+| Recurso                       | Nome                                                   |
+| ----------------------------- | ------------------------------------------------------ |
+| VNet                          | `vnet-gfbr-mvp`                                        |
+| Zona DNS privada + link       | `gfbr-mvp.private.postgres.database.azure.com`         |
+| Log Analytics                 | `log-gfbr-mvp`                                         |
+| Application Insights          | `appi-gfbr-mvp`                                        |
+| Identidades gerenciadas       | `id-gfbr-api-mvp`, `id-gfbr-web-mvp`                   |
+| Container Registry            | `acrgfbrmvpi75ffu`                                     |
+| Key Vault                     | `kv-gfbr-mvp-i75ffu`                                   |
+| Storage Account               | `stgfbrmvpi75ffu` (4 containers privados)              |
+| PostgreSQL Flexible Server 18 | `psql-gfbr-mvp-i75ffu`, database `guardiao_financeiro` |
+| Container Apps environment    | `cae-gfbr-mvp`                                         |
+| Container Apps                | `ca-gfbr-api-mvp`, `ca-gfbr-web-mvp`                   |
+| Container Apps job            | `caj-gfbr-migrate-mvp`                                 |
+| Orçamento                     | `budget-gfbr-mvp`                                      |
 
-| Item                         | Valor         |
-| ---------------------------- | ------------- |
-| Região                       |               |
-| Grupo de recursos            | `rg-gfbr-mvp` |
-| URL do frontend (`/status`)  |               |
-| Versão/tag das imagens       |               |
-| Revisão do schema (`/ready`) |               |
-| Orçamento criado             |               |
+O grupo `rg-gfbr-mvp-cae-infra` é criado e gerenciado pela plataforma.
+
+### Microsoft 365 — tenant do responsável
+
+| Recurso                         | Nome / valor                                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Shared Mailbox                  | `guardiao-financeiro-mvp@<domínio>`, `SharedMailbox`, `CustomAttribute1 = guardiao-financeiro-mvp`, login interativo bloqueado |
+| App Registration web + SP       | `guardiao-financeiro-web-mvp` (App Roles, atribuição obrigatória, redirect do Easy Auth)                                       |
+| App Registration de e-mail + SP | `guardiao-financeiro-mail-mvp` (sem permissões no Entra)                                                                       |
+| Service principal no Exchange   | `guardiao-financeiro-mail-mvp`                                                                                                 |
+| Personalização da organização   | `Enable-OrganizationCustomization` (autorizada em 2026-09-29)                                                                  |
+| Management Scope                | `gfbr-mvp-mailbox-scope` (`CustomAttribute1 -eq 'guardiao-financeiro-mvp'`)                                                    |
+| Atribuição de papel             | `gfbr-mvp-Mail-Read` — `Application Mail.Read` no escopo acima                                                                 |
+
+### Resultado de `scripts/azure/test-mvp.ps1`
+
+```text
+Container Registry   [ok] admin desabilitado · [ok] pull anônimo desabilitado
+Storage              [ok] sem acesso público · [ok] sem chave compartilhada · [ok] somente HTTPS
+                     [ok] TLS 1.2 · [ok] documents-raw, documents-derived, imports, exports privados
+Key Vault            [ok] RBAC · [ok] soft delete · [ok] purge protection · [ok] somente postgres-admin-password
+PostgreSQL           [ok] versão 18 · [ok] sem HA · [ok] backup 7 dias · [ok] require_secure_transport=on
+                     [ok] sem acesso público · [ok] database guardiao_financeiro
+Container Apps       [ok] API sem ingress externo · [ok] web com HTTPS obrigatório
+Aplicação            [ok] API pronta (0.1.0.dev1, ambiente mvp, schema 0001)
+                     [ok] /status responde · [ok] Content-Security-Policy · [ok] rota protegida → 401
+Todas as verificações passaram.
+```
+
+### Resultado de `infra/m365/Test-MailboxAccess.ps1`
+
+```text
+[ok] Nenhuma permissão de aplicação do Graph concedida no Entra ID
+Caixa do MVP        Application Mail.Read  gfbr-mvp-mailbox-scope  InScope=True   [ok] permitido
+Caixa do admin      Application Mail.Read  gfbr-mvp-mailbox-scope  InScope=False  [ok] negado
+Escopo de acesso ao e-mail validado.
+```
+
+## 6. Outputs não sensíveis
+
+| Item                         | Valor                                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------- |
+| Região                       | `brazilsouth`                                                                 |
+| Grupo de recursos            | `rg-gfbr-mvp`                                                                 |
+| URL do frontend (`/status`)  | `https://ca-gfbr-web-mvp.<domínio-do-ambiente>/status` (em `.azure/mvp.json`) |
+| Versão / tag das imagens     | `0.1.0.dev1` / tag `<commit>-<data>` gerada pelo script                       |
+| Revisão do schema (`/ready`) | `0001`                                                                        |
+| Orçamento criado             | sim — 250 na moeda de cobrança, alertas 50/80/100% real e 100% previsto       |
+
+### Problemas encontrados e corrigidos durante o deploy
+
+| Problema                                                                                 | Correção                                                            |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Provider `Microsoft.Network` não registrado                                              | Registrado pelo responsável (sem custo)                             |
+| Regra de firewall do PostgreSQL aparecia como "possível" no what-if                      | Modo de rede passou a ser parâmetro de compilação                   |
+| Reimplantação removeria o service endpoint `Microsoft.Storage` da sub-rede do PostgreSQL | Endpoint declarado no Bicep                                         |
+| Proxy repassava o `Host` público; o ingress interno roteia pelo `Host`                   | Nginx envia o `Host` do destino (`X-Forwarded-Host` com o original) |
+| Resolver do Nginx não aplica domínios de busca → 502                                     | Frontend usa o FQDN interno da API                                  |
+| Opções curtas da Azure CLI mudaram (`db show -d`)                                        | Validação usa `db list` com filtro                                  |
+| Windows PowerShell 5.1 transforma stderr da CLI em exceção                               | Consultas que podem falhar isoladas com `ErrorActionPreference`     |
+| Tenant sem RBAC customizado no Exchange (`IsDehydrated`)                                 | `Enable-OrganizationCustomization` com autorização explícita        |
 
 ## 7. Limitações e débitos técnicos
 
@@ -90,33 +156,33 @@ resultado de `test-mvp.ps1`.
 - [x] Documentação criada
 - [x] Bicep válido
 
-### Azure ⏳
+### Azure
 
-- [ ] Resource Group existe
-- [ ] ACR existe (admin desabilitado)
-- [ ] PostgreSQL 18 existe; database `guardiao_financeiro` existe
-- [ ] Storage existe; containers privados
-- [ ] Key Vault existe (RBAC, purge protection)
-- [ ] Log Analytics e Application Insights existem
-- [ ] Container Apps Environment existe
-- [ ] API de bootstrap implantada; frontend de bootstrap implantado
-- [ ] Health check funciona (`/api/health/ready` = `ok`)
-- [ ] Orçamento criado ou passo manual registrado
+- [x] Resource Group existe
+- [x] ACR existe (admin desabilitado)
+- [x] PostgreSQL 18 existe; database `guardiao_financeiro` existe
+- [x] Storage existe; containers privados
+- [x] Key Vault existe (RBAC, purge protection)
+- [x] Log Analytics e Application Insights existem
+- [x] Container Apps Environment existe
+- [x] API de bootstrap implantada; frontend de bootstrap implantado
+- [x] Health check funciona (`/api/health/ready` = `ok`)
+- [x] Orçamento criado ou passo manual registrado
 
-### Microsoft 365 ⏳
+### Microsoft 365
 
-- [ ] Shared Mailbox existe
-- [ ] App Registration Web existe (com Service Principal)
-- [ ] App Registration Mail existe (com Service Principal)
-- [ ] Escopo de acesso ao e-mail configurado
-- [ ] Caixa do MVP → permitido; outra caixa → negado; nenhuma permissão Graph no Entra
+- [x] Shared Mailbox existe
+- [x] App Registration Web existe (com Service Principal)
+- [x] App Registration Mail existe (com Service Principal)
+- [x] Escopo de acesso ao e-mail configurado
+- [x] Caixa do MVP → permitido; outra caixa → negado; nenhuma permissão Graph no Entra
 
 ### Segurança
 
 - [x] Nenhum segredo versionado (código, docs e parâmetros sem valores reais)
 - [x] Managed Identity usada para ACR, Key Vault e Storage (no código de infraestrutura)
 - [x] Blobs privados (no código de infraestrutura)
-- [ ] Permissões revisadas no ambiente real (`test-mvp.ps1`) ⏳
+- [x] Permissões revisadas no ambiente real (`test-mvp.ps1`, `Test-MailboxAccess.ps1`)
 
 ### Documentação
 
@@ -125,4 +191,9 @@ resultado de `test-mvp.ps1`.
 - [x] Custos
 - [x] Instruções de acesso ([`deployment-azure.md`](../deployment-azure.md) §5)
 - [x] Instruções de teardown ([`teardown-mvp.md`](../teardown-mvp.md))
-- [ ] Relatório final ⏳
+- [x] Relatório final (seção 9)
+
+## 9. Relatório final
+
+Sprint 0 concluída em 2026-09-29 e **aguardando aprovação**. ADRs 001–010 e 012–020
+seguem `PROPOSED` até a aprovação; ADR-011 `ACCEPTED`. A Sprint 1 não foi iniciada.
