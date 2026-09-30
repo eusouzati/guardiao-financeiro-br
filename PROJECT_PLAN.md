@@ -18,6 +18,9 @@
   Vault, excluir caixa, App Registration ou Service Principal, apagar blobs, reescrever o
   histórico do Git ([`docs/teardown-mvp.md`](docs/teardown-mvp.md)).
 - Não criar ambientes de homologação, produção ou equivalentes.
+- Repositório público no GitHub antecipado por decisão do responsável em 2026-09-29. A
+  revisão de histórico, dados e documentação da Sprint 10 continua obrigatória antes da
+  release `v0.1.0`.
 - Dúvidas não bloqueantes: solução mais simples e segura + registro em `docs/decisions/`.
 
 ### Fluxo de cada sprint
